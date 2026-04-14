@@ -1,0 +1,643 @@
+---
+title: "Preparação de Dados para análise"
+author: "Helgem de Souza"
+format: 
+  html:
+    self-contained: true
+    anchor-sections: true
+    toc: true
+    toc-location: left
+editor: visual
+bibliography: references.bib
+execute-dir: project
+---
+
+```{r, echo=FALSE}
+pacman::p_load(tidyverse, haven, jsonlite, httr, janitor, formattable, pander, labelled)
+
+```
+
+## Introdução
+
+*Dados reais, problemas reais.*
+
+::: {style="text-align: right"}
+Autor desconhecido
+:::
+
+Durante todo o curso de Estatística, como recurso didático, são apresentados diversos conjuntos de dados aos alunos. Esta apresentação tem como principal objetivo o aprendizado prático das técnicas aprendidas em sala de aula. De modo geral, esses conjuntos de dados apresentam uma estrutura ideal para a implementação de determinada técnica, para que o foco total do aluno esteja voltado para a utilização da técnica em si.
+
+Entretanto, no momento em que o aluno se depara com um conjunto de dados reais, como na realização de trabalhos de encerramento de curso, habitualmente ocorrem algumas dificuldades na utilização de dados reais. Quase sempre ocorrem erros na aplicação das técnicas, geralmente causados por alguma inconsistência nos dados. Isto ocorre devido ao fato de que, diferente das bases de dados fictícias, ou previamente organizadas, dados reais não são perfeitos, muito pelo contrário.
+
+De modo geral, dados reais apresentam uma série de problemas estruturais, que podem ser causados por diversas fontes, desde erros de digitação, problemas na importação entre softwares, aparecimento de dados corrompidos, dentre outras diversas possibilidades.
+
+É de extrema importância que tais inconsistências sejam solucionadas antes da realização de qualquer análise ou modelagem, pois a presença dessas inconsistências podem levar à geração de resultados enganosos, a modelos de pouca precisão e à conclusões equivocadas. Este processo de pré-processamento dos dados tendem a ser bastante trabalhosos. Estima-se que em uma análise de dados, de 70 a 80% do tempo é gasto durante a etapa de pré-processamento, etapa esta que inclui a preparação, organização e estruturação dos dados.
+
+Na próxima seção, trataremos dos principais problemas e apresentaremos algumas formas de solucionar aqueles mais frequentes. Porém, antes mesmo de iniciar a preparação dos dados para análise, por meio da correção dos possíveis problemas, é importante conhecer razoavelmente a estrutura dos dados. Nesse sentido, uma das ferramentas mais úteis é o **Dicionário de Dados**.
+
+### Dicionário de dados
+
+O dicionário de dados é uma tabela na qual os dados em estudo são descritos. Sua construção auxilia o analista a compreender melhor a constituição do conjunto de dados. O dicionário de dados geralmente consiste em uma tabela na qual informações sobre o conjunto de dados são inseridas. Cada variável é inserida em uma linha e as características relacionadas à variável são incluídas nas colunas. As principais informações são as seguintes:
+
+-   Nome da variável
+
+-   Descrição da variável
+
+-   Tipo de variável
+
+-   Níveis da variável, caso seja uma variável qualitativa
+
+Outros campos podem ser adicionados, como contagem de valores faltantes, se a variável é a transformação de alguma outra, e assim sucessivamente.
+
+No R, existem alguns pacotes para a construção de dicionários de dados com base em conjuntos de dados iniciais. Podemos por exemplo visualizar as variáveis, seu tipo e seus primeiros valores usando as funções `str`, nativa do R, ou a função `glimpse` do pacote `dplyr`. Porém queremos construir um dicionário com mais detalhes. Para isso, vamos trabalhar com o pacote `labelled`.
+
+O pacote `labelled` foi desenvolvido para trabalhar com dados do Stata e SPSS, que naturalmente apresentam rótulos. Entretanto ele possui duas funções que são excelentes para a construção de dicionários de dados em quaisquer `data frames`.
+
+-   `generate_dictionary`: gera um dicionário de dados a partir de um `data frame`, incluindo seu tipo, nome e níveis no caso de fatores e a contagem de dados faltantes.
+
+-   `set_variable_labels`: permite atribuir a descrição da variável com base em uma lista que relaciona o nome da variável à sua descrição.
+
+Vejamos um exemplo com o conjunto de dados `iris`:
+
+```{r}
+#Estrutura do banco de dados
+iris %>% 
+  str
+```
+
+Observe que o banco de dados possui 5 variáveis:
+
+-   `Sepal.Length`: comprimento da sépala
+
+-   `Sepal.Width`: largura da sépala
+
+-   `Petal.Length`: comprimento da pétala
+
+-   `Petal.Width`: largura da pétala
+
+-   `Species`: Espécie da flor
+
+Vamos construir o dicionário de dados com o uso da função `generate_dictionary`:
+
+```{r}
+pacman::p_load(labelled)
+
+#Geração do dicionário de variáveis do banco de dados iris
+iris %>% 
+  generate_dictionary()
+```
+
+Note que os níveis foram inseridos em linhas distintas para a variável `Species`. Podemos corrigir esse posicionamento com o uso da função `convert_list_columns_to_character`. Vamos aproveitar e incluir a descrição das variáveis usando a função `var_label`.
+
+```{r}
+#Geração do dicionário de variáveis do banco de dados iris
+dicionario <- iris %>% 
+  set_variable_labels(Sepal.Length = "comprimento da sépala", #Adiciona a descrição
+                 Sepal.Width = "largura da sépala",
+                 Petal.Length = "comprimento da pétala",
+                 Petal.Width = "largura da pétala",
+                 Species = "Espécie da flor") %>% 
+  generate_dictionary() %>% 
+  convert_list_columns_to_character()
+
+#Visualização do dicionário
+dicionario
+  
+```
+
+Sempre que ocorrerem alterações no banco de dados, é necessário atualizar o dicionário. Desse modo, o ideal é que um script à parte seja responsável por esse objeto.
+
+Agora que já conhecemos uma forma de construir o dicionário de dados, vamos passar para os problemas mais comuns na preparação de dados para análise.
+
+## Problemas mais comuns na preparação de dados
+
+Conforme mencionado, existem diversas possibilidades de problemas e inconsistências em bases de dados. Nesta seção, trabalharemos com as mais frequentes. Trataremos dos mais frequentes, na seguinte ordem:
+
+-   Problemas nos nomes das variáveis;
+
+-   Dados duplicados;
+
+-   Dados com ruído;
+
+-   Dados faltantes; ;
+
+-   *Outliers.*
+
+### Problemas com nomes de variáveis
+
+Muitas vezes, no momento da tabulação de dados, o usuário define os rótulos das variáveis de modo a facilitar seu preenchimento, seja por ele mesmo, seja por terceiros. Por este motivo, ao efetuar a leitura de conjuntos de dados, frequentemente nos deparamos com alguns problemas nos nomes das variáveis. Estes problemas podem gerar alguns contratempos na análise de dados.
+
+Em arquivos do tipo `.txt` por exemplo, a presença de espaços nos títulos de variáveis impede a leitura do arquivo. Entretanto, uma vez realizada a leitura, muitas vezes o trabalho de análise de dados é dificultado por uma má definição dos nomes das variáveis.
+
+Vamos utilizar a base de dados das músicas mais tocadas em 2024 no spotify. Vamos efetuar a importação e checar os nomes das variáveis.
+
+```{r}
+
+#Como os dados são separados por vírgula, utilizaremos a função read.csv
+dados_spotify <- read.csv("datasets/a6_pre_processamento/Spotify Songs 2024.csv")  
+
+#Rótulos antes da correção 
+glimpse(dados_spotify)
+
+```
+
+Note que os nomes encontram-se em caixa alta, o que torna a posterior modelagem dos dados um pouco mais complicada, dado que o R é *case sensitive*. Além disso, as variáveis apresentam pontos, que eram espaços originalmente e foram convertidos pelo R. Nestes casos, podemos utilizar o pacote `janitor` para corrigir os nomes das variáveis.
+
+A função `clean_names` remove espaços em branco e caracteres especiais, torna únicos nomes duplicados, substitui padrões nos títulos, dentre outras possibilidades, tornando os títulos de colunas mais legíveis e com melhor visualização. Vejamos como ficariam os nomes das variáveis anteriores sem e com a correção:
+
+```{r}
+
+#Rótulos originais e limpos
+data.frame(nomes_antigos = dados_spotify %>% names,
+           nomes_limpos = dados_spotify %>% clean_names %>% names)
+
+
+```
+
+A função `clean_names` também é bastante útil para remoção de redundâncias em títulos. Considere o conjunto de dados fictício gerado abaixo. Vamos remover o texto "Pressão Arterial" dos títulos e fazer abreviações dos demais termos, além das demais correções.
+
+```{r}
+
+#Geração do conjunto de dados fictício
+dados_pressao <- data.frame(`Pressão Arterial Sistólica Repouso` = rnorm(100, 120, 20), 
+                            `Pressão Arterial Diastólica Repouso` = rnorm(100, 80, 15),
+                            `Pressão Arterial Sistólica Exercício` = rnorm(100, 150, 25), 
+                            `Pressão Arterial Diastólica Exercício` = rnorm(100, 95, 20))
+
+data.frame(antigo = names(dados_pressao),
+           limpo = dados_pressao %>% clean_names(replace = c("Pressão.Arterial" = "pa", 
+                                          "Sistólica" = "sis",
+                                          "Diastólica" = "dis",
+                                          "Repouso" = "rep",
+                                          "Exercício" = "ex")) %>% names)
+
+```
+
+Esta pequena alteração pode reduzir bastante a dificuldade na definição de modelos e na digitação de códigos para a análise de dados. Note que é sempre interessante possuir o conjunto de dados originais em mãos caso seja necessário rememorar o nome original das variáveis.
+
+### Dados Duplicados
+
+Uma segunda fonte de erros em bancos de dados ocorre quando existem dados potencialmente duplicados. Este tipo de situação acontece devido a alguma falha no processo de coleta, importação ou mesmo digitação dos dados. Alguns exemplos de como dados duplicados podem ser incluídos na base de dados:
+
+-   Um usuário ao submeter um formulário ou requisição, desconfia que seus dados não foram enviados corretamente, e submete novamente a informação.
+
+-   Uma mesma unidade amostral é visitada por dois recenseadores, que repetem a pesquisa.
+
+-   Atendentes de call center apresentam a mesma oferta para um único cliente.
+
+-   Um usuário efetua uma compra recorrente em uma loja virtual, com os mesmos produtos.
+
+-   Valores em um experimento são duplicados para que haja a presença de réplicas.
+
+Estes exemplos são algumas das situações em que dados potencialmente duplicados podem ser inseridos. Entretanto, note que, as três primeiras situações provavelmente gerarão dados de fato duplicado. Entretanto, as duas últimas situações, geram dados que aparentemente são duplicados, mas que na realidade carregam informações relevantes em suas repetições. No caso da compra recorrente, a duplicação é uma informação absolutamente relevante para a análise. O mesmo ocorre no experimento, uma vez que determinados erros amostrais só podem ser estimados no caso de presença de réplicas.
+
+Pelos motivos descritos acima, antes de eliminar dados potencialmente duplicados, é necessário conhecer a natureza do banco de dados e ter a certeza de que os dados de fato são redundantes e sua presença pode acarretar em erros de mensuração ou conferir alguma vantagem técnica à unidade amostral em estudo.
+
+Existem dois tipos de duplicação de dados: duplicação exata e duplicação parcial. Na duplicação exata, conforme o próprio nome descreve, todos os atributos de dois ou mais registros são idênticos. Já na duplicação parcial, podem existir diferenças sutis entre os registros, porém, ao avaliar o quadro geral, percebe-se que se trata da mesma informação.
+
+A tabela a seguir apresenta exemplos de duplicatas exatas e parciais:
+
+| ID  | Modelo                    | Ano/Modelo | Avaliação |
+|-----|---------------------------|------------|-----------|
+| 1   | Volkswagen Gol 1.0        | 2012/2013  | 8         |
+| 2   | Volkswagen Polo 1.6 Turbo | 2016/2017  | 8,5       |
+| 3   | Volkswagen Gol 1.0        | 2013/2013  | 8         |
+| 4   | Volkswagen Up 1.0         | 2017/2017  | 7.5       |
+| 5   | VolksWagen Polo 1.6       | 2016/2017  | 8,5       |
+| 6   | Volkswagen Polo 1.6 Turbo | 2016/2017  | 8,5       |
+
+Note que apenas as linhas 2 e 6 são duplicatas exatas. As linhas 1 e 3, bem como as linhas 2 e 5 podem ser consideradas duplicatas parciais, a depender do contexto dos dados.
+
+A remoção de duplicatas exatas é bastante simples. Vamos verificar um exemplo no R com uma base de dados de 20 anos de avaliações da IGN, por meio da função `duplicated`.
+
+```{r, warning=FALSE}
+
+#Importação dos dados
+jogos_ign <- read.csv("datasets/a6_pre_processamento/ign.csv", h = T)
+glimpse(jogos_ign)
+
+#Vamos remover a coluna com os números de linhas
+jogos_ign <- jogos_ign[,-1]
+
+#Estrutura dos dados
+glimpse(jogos_ign)
+
+#Vamos verificar quantas linhas duplicadas existem no conjunto de dados
+duplicated(jogos_ign) %>% 
+  sum()
+
+#Vamos agora verificar os 48 registros duplicados
+jogos_ign %>% 
+  subset(duplicated(jogos_ign)) %>% 
+  arrange(title) %>% 
+  formattable()
+
+#Podemos utilizar o título para verificar quantas vezes cada duplicata aparece
+duplicados <- jogos_ign %>% 
+  subset(duplicated(jogos_ign)) %>% 
+  arrange(title)
+table(jogos_ign[jogos_ign$title %in% duplicados$title, "title"]) %>% 
+  sort(decreasing = T) %>% 
+  data.frame %>% 
+  formattable()
+
+#Agora vamos remover os valores duplicados
+jogos_ign_unicos <- jogos_ign[-which(duplicated(jogos_ign)), ]
+
+#Podemos realizar a mesma operação usando a função distinct do pacote dplyr
+jogos_ign_unicos <- distinct(jogos_ign)
+
+#Vejamos a diferença entre os conjuntos de dados
+nrow(jogos_ign) - nrow(jogos_ign_unicos)
+
+
+```
+
+Conforme vimos, a remoção de duplicatas exatas é bastante simples. Já a remoção de duplicatas parciais é um pouco mais complexa. Existem algumas opções para realizar a tarefa. Usaremos a função `dedup` do pacote `scrubr`. Como o pacote está disponível apenas no *github*, vamos instalá-lo utilizando o pacote `devtools`. Vamos carregar o pacote e realizar a busca por duplicatas. Como a busca por duplicatas parciais tende a levar bastante tempo, pois converte cada coluna em *string*, para então fazer a comparação entre elas e encontrar as duplicatas parciais, vamos aplicar a função apenas aos 100 primeiros registros.
+
+```{r, warning=FALSE, message=FALSE}
+
+#Instalando e carregando o pacote scrubr
+devtools::install_github("ropensci-archive/scrubr")
+pacman::p_load(scrubr)
+
+#Selecionando os 100 primeiros registros
+f_100_ign <- jogos_ign[1:100, ]
+
+#Busca pelas duplicatas parciais
+f_100_ign %>% 
+  dedup() 
+
+#Vamos agora verificar quais registros duplicados foram removidos
+attr(f_100_ign %>% dedup(), "dups") %>% 
+  formattable()
+```
+
+### Dados com ruído
+
+Além dos problemas anteriormente mencionados, dados inconsistentes podem ser bastante frequentes em conjuntos de dados. Pode-se definir dados com ruído como aqueles que não apresentam sentido dentro do banco de dados. Geralmente a ocorrência de dados com ruído tem como origem erros de digitação, ausência de padronização na entrada de dados, alterações nos procedimentos de coleta de dados, dentre outras fontes.
+
+A correção de dados com ruído dependerá de uma série de fatores. A primeira delas é a frequência de ocorrência destes dados ruidosos. Pode-se trabalhar com conjuntos de dados que apresentam um grande volume de inconsistências iguais, dados com uma série de inconsistências de pequena frequência ou mesmo dados com grandes volumes de ruído de diversas fontes.
+
+De modo geral, tais ruídos ocorrem em dados de texto, dados monetários e dados categóricos, mas também podem ocorrer em dados de data. Independente dos casos, é importante identificar os ruídos para avaliar qual será a estratégia de ação.
+
+Não há uma forma única de detecção de ruídos. Neste texto será apresentada uma estratégia baseada na avaliação da frequências de determinadas ocorrências. Vamos verificar o conjunto de dados a seguir. Ele representa informações sobre seguro saúde nos Estados Unidos. A base de dados original está disponível no [Kaggle](https://www.kaggle.com/datasets/teertha/ushealthinsurancedataset).
+
+```{r, warning=FALSE}
+
+#Leitura dos dados
+insurance <- read.csv("datasets/a6_pre_processamento/noisy_insurance.csv", h = T)
+
+#Estrutura dos dados
+glimpse(insurance)
+```
+
+Pela estrutura dos dados, é possível perceber que os valores cobrados, que deveriam ser numéricos, estão acompanhados do símbolo da moeda. Vamos remover estes caracteres e realizar a conversão para número. Será utilizada a função `str_remove` do pacote `stringr`. Note que, para que o R reconheça alguns caracteres especiais, é necessário precedê-los por "\\\\".
+
+```{r, warning=FALSE}
+
+#Remove os caracteres monetários e efetua a conversão para numérico
+insurance$charges <- insurance$charges %>% 
+  str_remove_all("US\\$ ") %>% 
+  as.numeric
+
+#Estrutura dos dados
+glimpse(insurance)
+
+```
+
+Vamos agora checar as variáveis numéricas para verificar se há alguma inconsistência. Podem ser utilizados gráficos e tabelas de frequências.
+
+```{r}
+#| warning: false
+
+#Frequência de idades dos titulares dos seguros-saúde
+table(insurance$age)
+
+#Boxplot de dados de IMC
+boxplot(insurance$bmi)
+
+#Frequência do número de filhos dos titulares dos seguros-saúde
+table(insurance$children)
+
+#Boxplot das taxas cobradas
+boxplot(insurance$charges)
+```
+
+Nos dados numéricos contínuos (IMC e taxas), aparentemente não há nenhuma discrepância perceptível. Por exemplo, não há taxas na casa de 6 dígitos, nem IMC menores que 15 ou maiores que 100. Em contrapartida, na idade do titular e no número de filhos, percebe-se alguns dados inconsistentes. Na idade, existem alguns valores maiores que 100, o que indica algum ruído, provavelmente algum erro de digitação. O mesmo ocorre com o número de filhos. Note que os valores saltam de 5 para 10, posteriormente valores na casa de duas dezenas. Idealmente, deve se contactar o responsável pelos dados e verificar se existe a possibilidade de ocorrência de tais valores. Vamos admitir que ocorreram erros de digitação. Para resolver os ruídos, vamos subtrair 100 das idades superiores a 100 anos e vamos subtrair 20 dos números de filhos que superam 2 dezenas, respectivamente. Há uma suspeita na ocorrência de 10 e 11 filhos, mas como são valores possíveis, vamos optar pela manutenção dos valores
+
+Uma observação importante é, quando for realizar alguma alteração no banco de dados, sempre salve o novo objeto com um nome modificado, para não sobreescrever os dados originais por acidente.
+
+```{r, warning=FALSE}
+
+#Salvando os dados em um novo objeto
+insurance_mod <- insurance
+
+#Corrigindo dados de idade e número de filhos
+insurance_mod$age <- ifelse(insurance_mod$age >=100,
+                            insurance_mod$age - 100, 
+                            insurance$age)
+
+insurance_mod$children <- ifelse(insurance_mod$children >=20,
+                                 insurance_mod$children - 20,
+                                 insurance_mod$children)
+
+
+#Nova frequência de idades dos titulares dos seguros-saúde
+table(insurance_mod$age)
+
+#Nova frequência do número de filhos dos titulares dos seguros-saúde
+table(insurance_mod$children)
+```
+
+Note que, com as correções aplicadas, os dados aparentam maior consistência. Agora vamos verificar os dados de texto. Vamos utilizar tabelas de frequencia simples para tentar encontrar alguma inconsistência nos dados
+
+```{r}
+
+#Tabela de frequencia da variável sexo
+table(insurance$sex)
+
+#Tabela de frequencia da variável fumante
+table(insurance$smoker)
+
+#Tabela de frequencia da variável região
+table(insurance$region)
+
+```
+
+Note que as variáveis sexo e região apresentam inconsistências nos dados. Ambas aparentam possuir erros de digitação.
+
+Para resolver esse tipo de inconsistência, podemos utilizar a função `case_when`, do pacote `dplyr`. Essa função é uma vetorização da função `ifelse` e possibilita várias alterações em uma única rotina. Nela é possível trablhar com o elemento completo, sem a necessidade de substituir partes das strings, como feito pela função `str_replace`. Vejamos como seriam as operações nas variáveis com essa função:
+
+```{r}
+
+#Antes da transformação
+table(insurance_mod$sex)
+
+#Agora vamos replicar a alteração por meio da função case_when
+insurance_mod$sex <- case_when(
+                    insurance_mod$sex %in% c("femae", "femalee")  ~ "female",
+                    insurance_mod$sex %in% c("mae", "malee")  ~ "male",
+
+                    .default = insurance_mod$sex
+  )
+
+
+#Depois da transformação
+table(insurance_mod$sex)
+
+
+#Antes da transformação
+table(insurance_mod$region)
+
+#Agora vamos replicar a alteração por meio da função case_when
+insurance_mod$region <- case_when(
+                    insurance_mod$region %in% c("norteast", "northast")  ~ "northeast",
+                    insurance_mod$region %in% c("northwst", "nortwest")  ~ "northwest",
+                    insurance_mod$region %in% c("souteast", "southast")  ~ "southeast",
+                    insurance_mod$region %in% c("southwst", "soutwest")  ~ "southwest",
+                    .default = insurance_mod$region
+  )
+
+#Depois da transformação
+table(insurance_mod$region)
+```
+
+Note que o parâmetro `.default` indica o que deve ser retornado nos casos em que nenhuma das condições for atendida. Se ele não for inserido, todas as observações que não se enquadrarem em um dos casos serão desconsideradas. De modo geral, basta informar a própria variável como retorno.
+
+As mesmas estratégias podem ser aplicadas em bancos de dados de grande dimensão.
+
+No caso de dados em formato de s*tring*, fatores e valores de moedas com caracteres especiais, a correção, mesmo em grandes conjuntos de dados é possível, pois a identificação é mais direta. Entretanto, quando se tratam de inconsistências em dados numéricos, nem sempre é possível identificar estas discrepâncias por meio de análise descritiva. Em outros casos, é possível identificar a inconsistência, mas o fato gerador da inconsistência não é identificável. Por exemplo, nos dados anteriores, foi possível identificar que haviam números adicionais digitados no início de cada valor.
+
+Quando a identificação do ruído é possível, mas a identificação de seu processo gerador não, existem estratégias voltadas para a substituição destes valores por meio da sua exclusão e imputação de dados. Abordaremos estas soluções juntamente com a correção de dados faltantes.
+
+### *Outliers*
+
+Um *outlier*, também conhecido como valor extremo, discrepante, aberrante, ponto fora da curva, etc., é um valor amostral que desvia tanto da amostra que tende-se a avaliar como proveniente de outro processo gerador, ou mesmo fruto de algum erro (dado ruidoso). A identificação de *outliers* é crucial durante o processo de limpeza de dados, pois tais valores podem acarretar alguns problemas na análise de dados, tais como:
+
+-   Aumento na variabilidade dos dados e nos erros de modelos;
+
+-   Influência na estimação;
+
+-   Quebra do pressuposto de normalidade, dentre outros
+
+É necessário bastante cuidado ao se tratar de *outliers*, pois apesar dos aspectos mencionados acima, eles podem trazer informações valiosas para a análise. Neste sentido, é importante que os mesmos não sejam tratados como dados gerados por ruído. Por exemplo, ao excluir um valor extremo de uma base de dados, podemos deixar de contabilizar uma observação rara, mas de extrema importância, como uma empresa de faturamento recorde, um candidato acima da média, um caso clínico improvável, dentre outras possibilidades.
+
+Essa diferenciação as vezes é bastante complexa. É como descascar uma laranja, queremos remover toda a casca, mas não queremos remover a extremidade da polpa da fruta. A casca seriam os dados com ruído e a extremidade da polpa da fruta seriam os *outliers.* Deve-se agir com bastante cautela para evitar a perda de conteúdo relevante.
+
+Na maioria das vezes trabalhamos com bases de dados de grande dimensão, tanto em número de observações quanto em número de variáveis. De modo geral, existem relações entre estas variáveis. Deste modo, podem ocorrer o que chamamos de *outliers* multivariados.
+
+*Outliers* multivariados são observações que, analisadas variável a variável não necessariamente apresentam *outliers,* mas quando analisadas em conjunto, considerando suas correlações, apresentam comportamento atípico. Este problema é ainda bastante incipiente e não existe metodologia definitiva para sua análise. Por este motivo, trataremos apenas de ***outliers*** **univariados**. Interessados no assunto podem acessar o trabalho de Duarte et. al.[-@duarte2024], que apresenta uma revisão sobre *outliers* multivariados, bem como a apresentação de uma nova metodologia de detecção.
+
+Mesmo em outliers multivariados, existem definições distintas. Um *outlier*, pela definição clássica é um dado que ultrapassa, à esquerda ou à direita, as seguintes quantidades:
+
+-   $Q_1 - 1,5 \cdot IQR$
+
+-   $Q_3 + 1,5 \cdot IQR$
+
+em que $Q_1$ e $Q_3$ são o primeiro e terceiro quartis, respectivamente, e $IQR$ é a distância interquartílica.
+
+Nesta seção, utilizaremos alguns métodos clássicos para a detecção de valores extremos. Como ilustração, utilizaremos a base de dados `hflights`, do pacote homônimo. Verificaremos se existem *outliers* dentre os tempos de atraso na decolagem dos vôos. Inicialmente, a verificação pode ser realizada por meio do boxplot dos dados.
+
+```{r, warning=FALSE}
+
+#Carregamento dos pacotes
+pacman::p_load(univOutl, hflights)
+
+#Vamos verificar o boxplot dos dados de atrasos na decolagem
+boxplot(hflights$DepDelay, horizontal = T)
+
+#Algumas estatísticas descritivas dos dados
+summary(hflights$DepDelay)
+
+#Tabela com candidatos a outliers
+table(hflights$DepDelay < quantile(hflights$DepDelay, .25, na.rm = T) - 1.5* IQR(hflights$DepDelay, na.rm = T) |
+      hflights$DepDelay > quantile(hflights$DepDelay, .75, na.rm = T) + 1.5* IQR(hflights$DepDelay, na.rm = T))
+
+```
+
+Um primeiro indício da presença de *outliers* é o valor da média, bem acima do valor da mediana. Como a média é influenciada por valores extremos, uma distância grande entre a média e a mediana já indica assimetria nos dados. O boxplot é bastante claro ao indicar que existem muitos valores acima do esperado. Todos os valores representados por círculos são possíveis candidatos a outlier, ou seja, todos eles estão a mais de 1,5 distâncias interquartílicas dos quartis 1 e 3. Como a distância interquartílica é 12, quaisquer partidas ocorridas com mais de 21 minutos de antecedência ou com mais de 27 minutos de atraso poderiam ser *outliers*. Entretanto, muitas observações atendem a este critério. Temos aproximadamente 11% dos valores nesta categoria. Deste modo, é necessária a utilização de algum teste estatístico para identificar os valores que de fato são *.*
+
+Existem alguns testes para detecção de outliers, presentes no pacote `outliers`
+
+-   Teste de Dixon (`dixon.test`)
+
+-   Teste de Grubb (`grubbs.test`)
+
+-   Variância interna e externa (`cochran.test`)
+
+-   Teste qui-quadrado (`chisq.out.test`)
+
+Entretanto, todos estes testes são voltados para dados em que a pressuposição de normalidade é verificada, o que claramente não é o caso. Neste caso, algumas abordagens podem ser utilizadas, como a utilização da distância de Cook e o processo descrito por Lund[-@lund1975tables].
+
+Para a distância de Cook, seja **n** o número de observações da variável. Qualquer valor cuja distância de Cook seja maior que $4/n$ seria considerado um outlier. Para calcular a distância de Cook em relação à média, devemos ajustar um modelo de regressão simples, do tipo $y = x$.
+
+```{r, warning=FALSE}
+
+#Modelo de regressão
+m <- lm(hflights$DepDelay ~ 1)
+
+#Cálculo da distância de Cook
+dc <- cooks.distance(m)
+length(dc)
+
+#Agora vamos verificar quantos valores atendem ao critério
+table(dc > 4 / nrow(hflights))
+
+```
+
+Ou seja, ao seguir este critério, teríamos aproximadamente 3% de outliers, logo, eliminamos 72% dos candidatos iniciais a *outliers*, pois a análise descritiva indicava mais de 25 mil candidatos em potencial.
+
+Entretanto, será que podemos considerar 3% dos dados como uma ocorrência rara? Seriam todos estes valores de fato extremos? Existe um processo diferente na geração destes dados? No fim das contas, a detecção de *outliers* trás mais perguntas do que respostas.
+
+Após a identificação, fica o seguinte questionamento: o que fazer com os *outliers.* A resposta é: depende. Vamos analisar alguns casos:
+
+-   Caso 1 - A presença de *outliers* afeta o desempenho de seu modelo: Neste caso, se o volume de dados for grande o suficiente para que a exclusão não seja um problema (outliers representam menos de 1% da amostra, por exemplo), a retirada destes valores pode apresentar pouco impacto e o modelo seria voltado apenas para dados de comportamento "normal", no sentido de não serem extremos.
+
+-   Caso 2 - Existem outliers o suficiente para gerar suspeição: Neste caso, talvez sua presença seja devida a alguma falha no processo amostral e tal processo deve ser revisto.
+
+-   Caso 3 - Existem muitos outliers: Neste caso, o ideal é estudar em conjunto com as demais variáveis se existe algum motivo particular para a ocorrência destes valores extremos antes de tomar a decisão de excluí-los ou não. Os mesmos podem ser tratados como um *cluster*, por exemplo.
+
+-   Caso 4 - A amostra é pequena: Neste caso, não se deve excluir os *outliers*, pois sua remoção pode tornar a amostra não representativa.
+
+Os casos apresentados são alguns dos diversos cenários possíveis. A presença do *outlier* inclusive pode ser o elemento de interesse, como por exemplo em detecções de fraudes, detecções de catástrofes naturais, dentre outras aplicações. Ou seja, a conduta com estes valores extremos dependerá da situação em estudo.
+
+### Dados Faltantes (*Missing Data*)
+
+É bastante comum, ao se trabalhar com dados, se deparar com dados faltantes. Estes dados faltantes podem se originar de diversas formas. Por exemplo, problemas no processo de importação dos dados, falha na coleta de dados, ausência de informação no momento da coleta, dentre outros. Dentre os dados faltantes, existem três diferentes tipos:
+
+-   **Dados faltantes completamente ao acaso (MCAR - Missing Completely at Random):** Dados que não foram computados devido à falha humana ou erros de entrada de dados. Dados faltantes do tipo MCAR indicam que a probabilidade de ausência da informação é uniforme para todos os dados, independentemente de suas características. Ou seja, não há um padrão em suas ausências. Por exemplo, um drone de aquisição de imagens de uma plantação cobre a área em forma de grid. Este drone apresenta uma falha de captura ocasionalmente. Deste modo, as falhas de captura ocorrerão de maneira aleatória. Este é o tipo de situação mais desejável, pois geralmente não afeta o processo.
+
+-   **Dados faltantes ao acaso (MAR - Missing at Random):** Dados que não foram computados, mas nos quais é possível identificar algum tipo de padrão de ausência. Entretanto, este padrão não tem relação direta com a variável. Um exemplo deste fenômeno seria o seguinte: em uma população, mulheres tendem a responder mais questionários que homens. Em um questionário sobre mercado de trabalho, homens tenderiam a responder menos que mulheres, o que não implicaria necessariamente em diferenças nos dados, pois a não resposta entre homens ocorreria aleatoriamente.
+
+-   **Dados faltantes não ao acaso (MNAR - Missing not at Random):** Dados que não são computados devido à características diretamente relacionadas à variável faltante. Este é o pior cenário possível, comparado aos anteriores. Este tipo de valor faltante geralmente é relacionado a um desenvolvimento ruim dos instrumentos de pesquisa. Por exemplo, em pesquisas relacionadas à renda, pessoas com renda baixa tendem a se sentir constrangidas a responder. Uma solução das potenciais soluções é a aplicação de questões indiretas, como frequência de consumo de determinados serviços, itens relacionados à residência, dentre outras possibilidades.
+
+Uma outra forma de dados faltantes, que não se enquadra nas categorias acima, são dados classificados como faltantes, mas que não o são de fato. Por exemplo, em uma pesquisa sobre um produto, existem duas perguntas: "Consome o produto X?" e "Avaliação do produto X". Neste caso, espera-se uma resposta nula para aqueles que não consomem o produto, mas o dado não é de fato faltante. O mesmo pode ocorrer quando novas variáveis são inseridas em bancos de dados antigos. Não haverão respostas para dados anteriores à sua implementação.
+
+O modo de identificar o tipo de dado faltante é a análise descritiva dos dados.
+
+Diante destes casos, como resolvemos esses problemas? Vamos apresentar algumas ideias de procedimentos para minimizar a presença de dados faltantes.
+
+A primeira abordagem é a exclusão dos dados faltantes. Caso não haja muitas observações com dados faltantes em relação ao montante total de dados, assim como discutido em relação aos *outliers*, os dados faltantes podem ser removidos ou omitidos das análises. Em R, podemos utilizar funções para esta finalidade, ou parâmetros de funções específicas. Vamos utilizar novamente o conjunto de dados `hflights` para ilustrar. A função `na.exclude` remove todas as linhas que contém pelo menos um valor faltante.
+
+```{r, warning=FALSE}
+
+#Remover todas as linhas que contém dados faltantes
+hflights %>% 
+  dim
+hflights %>% 
+  na.exclude %>% 
+  dim
+
+nrow(hflights) - nrow(na.exclude(hflights))
+
+```
+
+Note que foram removidas 3622 linhas que continam dados faltantes.
+
+Outra possibilidade é omitir os dados faltantes no cálculo de alguma estatística ou modelo. Geralmente se utilizam os parâmetros `na.rm`. Vamos calcular o tempo médio de voo.
+
+```{r, warning=FALSE}
+
+#Cálculo do tempo médio de voo
+mean(hflights$ActualElapsedTime)
+
+#Note que o cálculo não foi possível devido à presença de dados faltantes. Vamos removê-los
+mean(hflights$ActualElapsedTime, na.rm = T)
+
+#No caso de modelos, podemos omitir os dados
+```
+
+O descarte dos dados deve ser realizado apenas em casos do tipo **MCAR**, caso contrário, pode haver perda de informação.
+
+Já para os dados do tipo **MAR**, existem algumas possibilidades mais específicas:
+
+-   Substituir por um valor conveniente, como a média dos dados;
+
+-   Utilizar o valor imediatamente anterior (*hot-deck*);
+
+-   Substituir pelo valor mais frequente na coluna (moda);
+
+-   Substituir por um valor amostrado da coluna, dada sua probabilidade de ocorrência;
+
+-   Utilizar modelos preditivos baseados em regressão ou *machine learning*, baseados nas demais variáveis.
+
+Como exemplo, vamos utiizar o conjunto de dados de tempos de viagem, disponível em <https://openmv.net/info/travel-times>. A variável `FuelEconomy` apresenta alguns valores faltantes. Vamos tentar utilizar todos os métodos acima e verificar qual o mais eficaz. Vamos verificar os resultados no R.
+
+```{r, warning=FALSE}
+
+travel <- read.csv2("datasets/a6_pre_processamento/travel-times.csv", h = T, dec = ".")
+
+#Tabela de frequencia dos dados faltantes
+table(is.na(travel$FuelEconomy))
+
+#Média dos dados
+mean(travel$FuelEconomy)
+media <- mean(travel$FuelEconomy, na.rm = T)
+
+#Substituição pela media
+travel_media <- travel
+travel_media$FuelEconomy[is.na(travel$FuelEconomy)] <- media
+mean(travel_media$FuelEconomy)
+
+#Método hot-deck
+travel_hd <- travel
+hd <- which(is.na(travel_hd$FuelEconomy))
+travel_hd$FuelEconomy[hd] <- travel_hd$FuelEconomy[hd - 1]
+
+#Método valor mais frequente
+travel_moda <- travel
+moda <- which(is.na(travel_moda$FuelEconomy))
+travel_moda$FuelEconomy[moda] <- table(travel_moda$FuelEconomy) %>%
+  which.max %>% 
+  as.numeric()
+mean(travel_moda$FuelEconomy)
+
+#Método por probabilidades de ocorrência
+travel_prob <- travel
+id_prob <- which(is.na(travel_prob$FuelEconomy))
+prob <- table(travel_prob$FuelEconomy)/sum(table(travel_prob$FuelEconomy))
+input <- sample(as.numeric(names(prob)), prob = prob)
+travel_prob$FuelEconomy[id_prob] <- input
+mean(travel_prob$FuelEconomy)
+
+#Regressão
+travel_reg <- travel
+reg <- which(is.na(travel_reg$FuelEconomy))
+model <- lm(FuelEconomy~., data = travel_reg)
+pred <- predict(model)
+travel_reg$FuelEconomy[reg] <- pred[reg]
+mean(travel_prob$FuelEconomy)
+
+#Vamos compilar os resultados das estatísticas descritivas para comparar as metodologias
+
+comp <- rbind(summary(travel$FuelEconomy),
+      summary(travel_media$FuelEconomy),
+      summary(travel_moda$FuelEconomy), 
+      summary(travel_prob$FuelEconomy),
+      summary(travel_reg$FuelEconomy))
+
+comp <- data.frame(metodo = c("Original", "Média", "Moda", "Mais provável", "regressao"), comp) %>% .[, -c(2, 8)] %>% formattable()
+
+comp
+```
+
+Note que temos 19 dados faltantes na variável. Após a imputação, em termos médios, o melhor método é a substituição pela média. Porém, os métodos de valor mais provável e regressão, além de se aproximarem da média, não afetaram os valores do terceiro quartil e nem do máximo. A escolha pelo melhor método de imputação dependerá da modelagem que será aplicada aos dados. Deve-se escolher aquela que afetar menos a estrutura original dos dados
+
+Neste texto relatamos alguns dos problemas mais frequentes. De certo existem outros problemas que devem ser resolvidos, como balanceamento de dados para modelos de aprendizado por exemplo. Entretanto se tratam de problemas mais específicos e devem ser tratados dentro das aplicações específicas.
+
+## Exercícios
+
+Com o banco de dados `veiculos_cl.csv`, execute as seguintes alterações para uma eventual análise de dados:
+
+1.  Leia o arquivo e corrija o nome das variáveis
+
+2.  Crie o dicionário de variáveis.
+
+3.  Converta as variáveis `valor` e `km` para numérico.
+
+4.  Verifique e existe algum outlier entre os valores de revenda dos veículos
+
+5.  Delete as observações 3, 7, 14 da variável km. Teste todos os métodos de imputação de dados apresentados e identifique qual deles apresenta melhores resultados.
+
+### Referências

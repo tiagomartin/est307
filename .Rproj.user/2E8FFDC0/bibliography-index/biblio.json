@@ -1,0 +1,602 @@
+{
+    "sources": [
+        {
+            "author": [
+                {
+                    "family": "Pereira",
+                    "given": "Tiago Martins"
+                }
+            ],
+            "id": "Pereira2022",
+            "issued": {
+                "date-parts": [
+                    [
+                        2022
+                    ]
+                ]
+            },
+            "publisher": "Departamento de Estatística - Universidade Federal de Ouro Preto",
+            "title": "Notas de aula em visualização e manipulação de dados usando o r",
+            "type": ""
+        },
+        {
+            "author": [
+                {
+                    "family": "Daróczi",
+                    "given": "Gergely"
+                }
+            ],
+            "id": "daroczi2015mastering",
+            "issued": {
+                "date-parts": [
+                    [
+                        2015
+                    ]
+                ]
+            },
+            "publisher": "Packt Publishing Ltd",
+            "title": "Mastering data analysis with r",
+            "type": "book"
+        },
+        {
+            "author": [
+                {
+                    "family": "Wickham",
+                    "given": "Hadley"
+                },
+                {
+                    "family": "Grolemund",
+                    "given": "Garrett"
+                }
+            ],
+            "id": "wickham2016r",
+            "issued": {
+                "date-parts": [
+                    [
+                        2016
+                    ]
+                ]
+            },
+            "publisher": "\" O’Reilly Media, Inc.\"",
+            "title": "R for data science: Import, tidy, transform, visualize, and model data",
+            "title-short": "R for data science",
+            "type": "book"
+        },
+        {
+            "DOI": "10.21105/joss.01686",
+            "author": [
+                {
+                    "family": "Wickham",
+                    "given": "Hadley"
+                },
+                {
+                    "family": "Averick",
+                    "given": "Mara"
+                },
+                {
+                    "family": "Bryan",
+                    "given": "Jennifer"
+                },
+                {
+                    "family": "Chang",
+                    "given": "Winston"
+                },
+                {
+                    "family": "McGowan",
+                    "given": "Lucy D’Agostino"
+                },
+                {
+                    "family": "François",
+                    "given": "Romain"
+                },
+                {
+                    "family": "Grolemund",
+                    "given": "Garrett"
+                },
+                {
+                    "family": "Hayes",
+                    "given": "Alex"
+                },
+                {
+                    "family": "Henry",
+                    "given": "Lionel"
+                },
+                {
+                    "family": "Hester",
+                    "given": "Jim"
+                },
+                {
+                    "family": "Kuhn",
+                    "given": "Max"
+                },
+                {
+                    "family": "Pedersen",
+                    "given": "Thomas Lin"
+                },
+                {
+                    "family": "Miller",
+                    "given": "Evan"
+                },
+                {
+                    "family": "Bache",
+                    "given": "Stephan Milton"
+                },
+                {
+                    "family": "Müller",
+                    "given": "Kirill"
+                },
+                {
+                    "family": "Ooms",
+                    "given": "Jeroen"
+                },
+                {
+                    "family": "Robinson",
+                    "given": "David"
+                },
+                {
+                    "family": "Seidel",
+                    "given": "Dana Paige"
+                },
+                {
+                    "family": "Spinu",
+                    "given": "Vitalie"
+                },
+                {
+                    "family": "Takahashi",
+                    "given": "Kohske"
+                },
+                {
+                    "family": "Vaughan",
+                    "given": "Davis"
+                },
+                {
+                    "family": "Wilke",
+                    "given": "Claus"
+                },
+                {
+                    "family": "Woo",
+                    "given": "Kara"
+                },
+                {
+                    "family": "Yutani",
+                    "given": "Hiroaki"
+                }
+            ],
+            "id": "tidyverse",
+            "issued": {
+                "date-parts": [
+                    [
+                        2019
+                    ]
+                ]
+            },
+            "page": "1686",
+            "title": "Welcome to the tidyverse",
+            "type": "article-journal",
+            "volume": "4"
+        },
+        {
+            "URL": "https://CRAN.R-project.org/package=shiny",
+            "author": [
+                {
+                    "family": "Chang",
+                    "given": "Winston"
+                },
+                {
+                    "family": "Cheng",
+                    "given": "Joe"
+                },
+                {
+                    "family": "Allaire",
+                    "given": "JJ"
+                },
+                {
+                    "family": "Sievert",
+                    "given": "Carson"
+                },
+                {
+                    "family": "Schloerke",
+                    "given": "Barret"
+                },
+                {
+                    "family": "Xie",
+                    "given": "Yihui"
+                },
+                {
+                    "family": "Allen",
+                    "given": "Jeff"
+                },
+                {
+                    "family": "McPherson",
+                    "given": "Jonathan"
+                },
+                {
+                    "family": "Dipert",
+                    "given": "Alan"
+                },
+                {
+                    "family": "Borges",
+                    "given": "Barbara"
+                }
+            ],
+            "id": "shiny",
+            "issued": {
+                "date-parts": [
+                    [
+                        2022
+                    ]
+                ]
+            },
+            "title": "Shiny: Web application framework for r",
+            "title-short": "Shiny",
+            "type": "article-journal"
+        },
+        {
+            "URL": "https://CRAN.R-project.org/package=shinydashboard",
+            "author": [
+                {
+                    "family": "Chang",
+                    "given": "Winston"
+                },
+                {
+                    "family": "Borges Ribeiro",
+                    "given": "Barbara"
+                }
+            ],
+            "id": "shinydashboard",
+            "issued": {
+                "date-parts": [
+                    [
+                        2021
+                    ]
+                ]
+            },
+            "title": "Shinydashboard: Create dashboards with ’shiny’",
+            "title-short": "Shinydashboard",
+            "type": "article-journal"
+        },
+        {
+            "URL": "https://www.R-project.org/",
+            "author": [
+                {
+                    "given": "R Core Team"
+                }
+            ],
+            "id": "base",
+            "issued": {
+                "date-parts": [
+                    [
+                        2022
+                    ]
+                ]
+            },
+            "title": "R: A language and environment for statistical computing",
+            "title-short": "R",
+            "type": "article-journal"
+        },
+        {
+            "URL": "https://CRAN.R-project.org/package=stringr",
+            "author": [
+                {
+                    "family": "Wickham",
+                    "given": "Hadley"
+                }
+            ],
+            "id": "stringr",
+            "issued": {
+                "date-parts": [
+                    [
+                        2022
+                    ]
+                ]
+            },
+            "title": "Stringr: Simple, consistent wrappers for common string operations",
+            "title-short": "Stringr",
+            "type": "article-journal"
+        },
+        {
+            "URL": "https://CRAN.R-project.org/package=haven",
+            "author": [
+                {
+                    "family": "Wickham",
+                    "given": "Hadley"
+                },
+                {
+                    "family": "Miller",
+                    "given": "Evan"
+                },
+                {
+                    "family": "Smith",
+                    "given": "Danny"
+                }
+            ],
+            "id": "haven",
+            "issued": {
+                "date-parts": [
+                    [
+                        2022
+                    ]
+                ]
+            },
+            "title": "Haven: Import and export ’SPSS’, ’stata’ and ’SAS’ files",
+            "title-short": "Haven",
+            "type": "article-journal"
+        },
+        {
+            "URL": "https://CRAN.R-project.org/package=rvest",
+            "author": [
+                {
+                    "family": "Wickham",
+                    "given": "Hadley"
+                }
+            ],
+            "id": "rvest",
+            "issued": {
+                "date-parts": [
+                    [
+                        2022
+                    ]
+                ]
+            },
+            "title": "Rvest: Easily harvest (scrape) web pages",
+            "title-short": "Rvest",
+            "type": "article-journal"
+        },
+        {
+            "URL": "https://CRAN.R-project.org/package=RSelenium",
+            "author": [
+                {
+                    "family": "Harrison",
+                    "given": "John"
+                }
+            ],
+            "id": "RSelenium",
+            "issued": {
+                "date-parts": [
+                    [
+                        2022
+                    ]
+                ]
+            },
+            "title": "RSelenium: R bindings for ’selenium WebDriver’",
+            "title-short": "RSelenium",
+            "type": "article-journal"
+        },
+        {
+            "author": [
+                {
+                    "family": "Nield",
+                    "given": "Thomas"
+                }
+            ],
+            "id": "nield2016getting",
+            "issued": {
+                "date-parts": [
+                    [
+                        2016
+                    ]
+                ]
+            },
+            "publisher": "\" O’Reilly Media, Inc.\"",
+            "title": "Getting started with SQL: A hands-on approach for beginners",
+            "title-short": "Getting started with SQL",
+            "type": "book"
+        },
+        {
+            "author": [
+                {
+                    "family": "Barbosa",
+                    "given": "Josino José"
+                },
+                {
+                    "family": "Oliveira",
+                    "given": "Fernando Luiz Pereira"
+                },
+                {
+                    "family": "Duarte",
+                    "given": "Anderson Ribeiro"
+                }
+            ],
+            "genre": "PhD thesis",
+            "id": "Barbosa2021",
+            "issued": {
+                "date-parts": [
+                    [
+                        2021
+                    ]
+                ]
+            },
+            "publisher": "Universidade Federal de Viçosa",
+            "title": "Data-driven cluster analysis method: Uma nova metodologia para detecção de outliers em dados multivariados",
+            "title-short": "Data-driven cluster analysis method",
+            "type": "thesis"
+        },
+        {
+            "author": [
+                {
+                    "family": "Daróczi",
+                    "given": "Gergely"
+                }
+            ],
+            "id": "daroczi2015mastering",
+            "issued": {
+                "date-parts": [
+                    [
+                        2015
+                    ]
+                ]
+            },
+            "publisher": "Packt Publishing Ltd",
+            "title": "Mastering data analysis with r",
+            "type": "book"
+        },
+        {
+            "author": [
+                {
+                    "family": "Lund",
+                    "given": "Richard E"
+                }
+            ],
+            "container-title": "Technometrics",
+            "id": "lund1975tables",
+            "issue": "4",
+            "issued": {
+                "date-parts": [
+                    [
+                        1975
+                    ]
+                ]
+            },
+            "page": "473-476",
+            "publisher": "Taylor & Francis",
+            "title": "Tables for an approximate test for outliers in linear models",
+            "type": "article-journal",
+            "volume": "17"
+        },
+        {
+            "author": [
+                {
+                    "family": "Wilkinson",
+                    "given": "Leland"
+                }
+            ],
+            "id": "wilkinson2012grammar",
+            "issued": {
+                "date-parts": [
+                    [
+                        2012
+                    ]
+                ]
+            },
+            "publisher": "Springer",
+            "title": "The grammar of graphics",
+            "type": "book"
+        },
+        {
+            "URL": "https://rstudio.github.io/leaflet/map_widget.html",
+            "container-title": "Leaflet for R - the map widget",
+            "id": "leaflet",
+            "title": "Leaflet for r - the map widget",
+            "type": ""
+        },
+        {
+            "URL": "http://davidgohel.github.io/ggiraph/",
+            "container-title": "ggiraph makes “ggplot” graphics interactive.",
+            "id": "ggiraph",
+            "title": "Ggiraph makes “ggplot” graphics interactive",
+            "type": ""
+        },
+        {
+            "author": [
+                {
+                    "family": "Sievert",
+                    "given": "Carson"
+                }
+            ],
+            "id": "sievert2020interactive",
+            "issued": {
+                "date-parts": [
+                    [
+                        2020
+                    ]
+                ]
+            },
+            "publisher": "CRC Press",
+            "title": "Interactive web-based data visualization with r, plotly, and shiny",
+            "type": "book"
+        },
+        {
+            "author": [
+                {
+                    "family": "Few",
+                    "given": "Stephen"
+                }
+            ],
+            "id": "few2006information",
+            "issued": {
+                "date-parts": [
+                    [
+                        2006
+                    ]
+                ]
+            },
+            "publisher": "O’Reilly Media, Inc.",
+            "title": "Information dashboard design: The effective visual communication of data",
+            "title-short": "Information dashboard design",
+            "type": "book"
+        },
+        {
+            "URL": "https://programando-em-shiny.curso-r.com/",
+            "author": [
+                {
+                    "family": "Amorim",
+                    "given": "William"
+                }
+            ],
+            "id": "programandoemshiny",
+            "issued": {
+                "date-parts": [
+                    [
+                        2023
+                    ]
+                ]
+            },
+            "title": "Programando em shiny",
+            "type": ""
+        },
+        {
+            "author": [
+                {
+                    "family": "Nield",
+                    "given": "Thomas"
+                }
+            ],
+            "id": "nield2016",
+            "issued": {
+                "date-parts": [
+                    [
+                        2016
+                    ]
+                ]
+            },
+            "publisher": "\" O’Reilly Media, Inc.\"",
+            "title": "Getting started with SQL",
+            "type": "book"
+        },
+        {
+            "author": [
+                {
+                    "family": "Duarte",
+                    "given": "AR"
+                },
+                {
+                    "family": "Barbosa",
+                    "given": "JJ"
+                },
+                {
+                    "family": "Martins",
+                    "given": "HSR"
+                },
+                {
+                    "family": "Oliveira",
+                    "given": "FLP"
+                }
+            ],
+            "container-title": "Communications in Statistics-Simulation and Computation",
+            "id": "duarte2024",
+            "issued": {
+                "date-parts": [
+                    [
+                        2024
+                    ]
+                ]
+            },
+            "page": "1-21",
+            "publisher": "Taylor & Francis",
+            "title": "Data-driven cluster analysis method: A novel outliers detection method in multivariate data",
+            "title-short": "Data-driven cluster analysis method",
+            "type": "article-journal"
+        }
+    ],
+    "project_biblios": []
+}

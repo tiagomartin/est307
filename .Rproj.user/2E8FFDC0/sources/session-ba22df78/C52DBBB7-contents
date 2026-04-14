@@ -1,0 +1,1115 @@
+---
+title: "Shiny - Layouts e Formatação"
+author: "Helgem de Souza"
+format: 
+  html:
+    self-contained: true
+    toc: true
+    code-fold: false
+    code-summary: "Mostrar código"
+editor: visual
+bibliography: references.bib
+---
+
+## 
+
+Nas aulas anteriores, exploramos os principais aspectos operacionais relacionados à criação de apps e dashboards com o uso do pacote `shiny`. Não foram apresentados os aspectos relacionados ao quesito visual dos aplicativos.
+
+Na aula inicial de shiny, discutimos brevemente a necessidade de desenvolvermos um dashboard que, além de apresentar as informações necessárias, também apresente um aspecto visual agradável, que facilite a visualização das informações.
+
+Um dos aspectos fundamentais para atingir os objetivos acima é a distribuição dos elementos no corpo de nosso *dashboard*. Vimos que o `shiny` oferece uma gama de elementos que podem compor nosso *dashboard*, como elementos de entrada, tais quais filtros, caixas de seleção, botões, etc. Também podemos inserir gráficos, tabelas, imagens, dentre outros, na construção destes aplicativos. Precisamos buscar formas de apresentar estes elementos de uma forma otimizada. A esta distribuição de elementos damos o nome de *layout.*
+
+Os layouts em shiny podem ser divididos em duas categorias principais:
+
+-   Layouts de página única
+
+-   Layouts de múltiplas páginas
+
+Porém, antes de apresentar os tipos de layout, é importante compreendermos como os elementos são distribuídos dentro de uma página no `shiny`. Esta distribuição é baseada em um sistema de ***grid**.*
+
+## Sistema de Grid
+
+As aplicações em `shiny` são construídas em um framework chamado [***Boostrap***](https://getbootstrap.com/). O Boostrap é o *framework* mais popular para desenvolvimento de sites responsivos. Um dos principais motivos é que ele os sites gerados neste framework se adaptam ao tamanho da janela de exibição e até mesmo ao tipo de dispositivo.
+
+Por exemplo, um app gerado em `shiny` não necessitará de adaptações para funcionar em um dispositivo móvel. O próprio *framework* o adapta para diversos tamanhos de tela.
+
+O pacote herda características do Bootstrap. Uma delas é o sistema de grid, ou *grid system*, no original. Este sistema estabelece as seguintes diretrizes (adaptado de @programandoemshiny):
+
+1.  os elementos em uma página serão dispostos primeiramente em linhas;
+
+2.  cada nova linha será colocada embaixo da anterior;
+
+3.  cada linha pode ser dividida em até 12 colunas; independentemente do tamanho da tela;
+
+4.  cada coluna pode ter até 12 unidades de comprimento, sendo que a soma dos comprimentos das colunas de uma linha deve ser no máximo 12;
+
+5.  quando a tela for pequena o suficiente^[1](https://programando-em-shiny.curso-r.com/layouts.html#fn1)^ todas as colunas passarão a ter comprimento 12.
+
+![](img/layout_shiny/gridsystem.jpg){style="border-style: groove;"}
+
+Ou seja, páginas em shiny são formadas por linhas. Cada linha poderá conter até 12 colunas, cujo comprimento varia de 1 a 12, cuja soma do comprimento das colunas em cada linha não pode ultrapassar 12. Como a página é gerada em Bootstrap, caso a janela fique pequena, as colunas passam a ter largura 12 automaticamente e são dispostas uma abaixo da outra.
+
+No shiny utilizamos duas funções para criar linhas e colunas:
+
+-   `fluidRow()` - Cria uma linha
+
+-   `column(width, offset)` - Cria uma coluna. O parâmetro `width` define a largura da coluna e o padâmetro `offset` define o deslocamento da coluna para a direita, em elementos da largura total, a partir da margem esquerda.
+
+Uma coluna deve ser sempre alocada dentro de uma linha, ou seja, a função `column` deve estar sempre dentro da função `fluidRow`. A imagem a seguir exemplifica o uso das duas funções.
+
+![](img/layout_shiny/gridsystem2.png){style="border-style: groove;"}
+
+Note que colunas com valor de offset definido deixam um espaço em branco antes de si. Este parâmetro pode ser importante para definir posicionamentos customizados de elementos.
+
+Também podemos incluir linhas dentro de colunas para variar o layout do nosso app. O ideal é testar a disposição destes elementos conforme a aplicação desejada. Por exemplo, se quisermos elaborar o layout a seguir, devemos criar uma linha, dentro dela duas colunas e dentro da segunda coluna, duas linhas, devemos escrever nossa UI com a estrutura abaixo:
+
+**Exemplo**
+
+![](img/layout_shiny/layout_1.png){style="border-style: groove;" fig-align="center"}
+
+**Código**
+
+```{r, eval = F}
+library(pacman)
+p_load(shiny, ggplot2, tidyverse, DT)
+
+#UI
+ui <- fluidPage(
+  
+  #Título
+  titlePanel("Exemplo fluidPage()"),
+  
+  #Linha 1
+  fluidRow(
+    
+    #Coluna 1
+    column(6,
+           
+           #Tabela
+           dataTableOutput("tabela")
+           ),
+    
+    #Coluna 2
+    column(6,
+           
+           #Coluna 2 - Linha 1
+           fluidRow(
+             
+             #Gráfico 1
+             plotOutput("grafico1")
+             
+           ),
+           
+           #Coluna 2 - Linha 2
+           fluidRow(
+             
+             #Gráfico 1
+             plotOutput("grafico2")
+             
+             
+           ),
+           
+           )
+  )
+  
+)
+
+# Server
+server <- function(input, output) {
+
+  dados <- reactive({
+    
+    data.frame(y = sample(letters[1:3], 100, replace = T), x = sample(paste("Item", 1:5), 100, replace = T))
+    
+  })
+  
+  output$grafico1 <- renderPlot({
+    
+    dados() %>% 
+      ggplot(aes(x = x, fill = y)) + 
+      geom_bar(position = 'dodge', stat = 'count')
+    
+  })
+  
+  output$grafico2 <- renderPlot({
+    
+    dados() %>% 
+      ggplot(aes(x = x, fill = y)) + 
+      geom_bar(position = 'stack', stat = 'count')
+    
+  })
+  
+  output$tabela <- renderDT({
+    
+    dados() 
+    
+  })
+    
+}
+
+# Run the application 
+shinyApp(ui = ui, server = server)
+
+```
+
+**Formato gerado:**
+
+![](img/layout_shiny/app_layout1.PNG){style="border-style: groove;" fig-align="center"}
+
+Independente do layout selecionado, a disposição dos objetos dentro da página dependerá deste sistema de grid. Portanto é importante a compreensão de como trabalhar com linhas e colunas para dispor os elementos na página da melhor maneira possível. A seguir vamos explorar alguns dos layouts prontos do pacote `shiny`.
+
+## Layouts de página única
+
+Layouts de página única são aqueles que incluem todos os elementos na mesma página, sem a necessidade de navegação para o acesso de outros elementos. *Layouts* deste formato são bastante utilizados, uma vez que devemos dispor nosso conteúdo em mais de uma página apenas se estritamente necessário.
+
+O primeiro layout de página única foi apresentado no exemplo anterior utiliza linhas fluidas, ou `fluidRow()`. Apenas os elementos gráficos são exibidos, em uma página simples, conforme disposição do conteúdo aplicada em linhas ou colunas. Trata-se de um formato bastante simples e direto, ideal para quando não há inputs, ou eles estão relacionados a cada objeto e serão posicionados próximos a eles.
+
+Existem variações deste layout que independem de um posicionamento pré-estabelecido de linhas e colunas:
+
+-   `verticalLayout()` - Os objetos serão incluídos de forma vertical, um sobre o outro.
+
+-   `splitLayout()` - Layout horizontal. Os elementos são dispostos lado a lado e tem sua largura reduzida conforme o tamanho da janela na horizontal
+
+-   `flowLayout()` - Os objetos serão incluídos em linhas e exibidos lado à lado, conforme o tamanho da janela. Se a janela for reduzida, o último objeto à direita será deslocado para baixo dos demais, e assim sucessivamente em caso de seguidas reduções de janelas, até que ele seja exibido como o layout vertical.
+
+    A imagem abaixo resume os layouts apresentados acima:
+
+![fonte: https://bookdown.org/weicheng/shinyTutorial/ui.html](img/layout_shiny/layouts_sp.png){style="border-style: groove;" fig-align="center"}
+
+Vamos utilizar o código abaixo para verificar o comportamento de cada um destes layouts. Ao comentar as linhas 8, 9 e 10, alteramos o tipo de layout. Copie-o em um novo app e teste cada um deles comentando duas das 3 linhas.
+
+```{r, eval=FALSE}
+library(pacman)
+p_load(shiny, shinyWidgets, shinydashboard, tidyverse, DT)
+
+#UI
+ui <- fluidPage(
+  titlePanel("Exemplo fluidPage() + Layouts"),
+  
+    #verticalLayout(
+    #splitLayout(
+    flowLayout(
+      
+      #Tabela
+      dataTableOutput("tabela"),
+      
+      #Gráfico 1
+      plotOutput("grafico1"),
+      
+      
+      #Gráfico 2
+      plotOutput("grafico2")
+    )
+)
+
+# Server
+server <- function(input, output) {
+
+  dados <- reactive({
+    
+    data.frame(y = sample(letters[1:3], 100, replace = T), x = sample(paste("Item", 1:5), 100, replace = T))
+    
+  })
+  
+  output$tabela <- renderDT({
+    
+    dados() 
+    
+  })
+  
+  output$grafico1 <- renderPlot({
+    
+    dados() %>% 
+      ggplot(aes(x = x, fill = y)) + 
+      geom_bar(position = 'dodge', stat = 'count')
+    
+  })
+  
+  output$grafico2 <- renderPlot({
+    
+    data.frame(x = 1:5, y = (rnorm(5) + 6:10)) %>% 
+      ggplot(aes(x=x, y = y)) + 
+      geom_line(color = 'turquoise', size = 3) + 
+      scale_x_continuous("Itens", labels = c("1" = "Item 1", "2" = "Item 2" ,"3" =  "Item 3", "4" = "Item 4", "5" = "Item 5"))
+    
+  })
+    
+}
+
+# Run the application 
+shinyApp(ui = ui, server = server)
+```
+
+Um quarto layout de página única é o `sidebarLayout`. Este layout reserva um espaço lateral para a inclusão de widgets, tais como `sliders`, `selectinputs`, caixas de texto, etc. É um layout muito utilizado quando os controles se aplicam a todos os objetos da página. Na `ui`, agora os objetos devem ser incluídos dentro de duas funções distintas: `sidebarPanel()` e `mainPanel()`, para o painel lateral e painel principal, respectivamente.
+
+![fonte: https://bookdown.org/weicheng/shinyTutorial/ui.html](img/layout_shiny/sidebar.PNG){style="border-style: groove;" fig-align="center"}
+
+A seguir o código anterior, com um painel lateral para controle dos elementos do *dashboard*. Note que o painel principal segue a lógica do layout de linhas e colunas. Ambos os painéis possuem características do sistema de grid, ou seja, podem receber os layouts anteriores. No painel lateral, caso não incluamos nenhum tipo de linha ou coluna, os elementos ficarão dispostos um imediatamente abaixo do outro, como em um layout vertical.
+
+```{r, eval = F}
+library(pacman)
+p_load(shiny, shinyWidgets, shinydashboard, tidyverse, DT)
+
+#UI
+ui <- fluidPage(
+  titlePanel("Exemplo fluidPage() + sidebarLayout"),
+  
+    sidebarLayout(
+      
+      #Painel Lateral    
+      sidebarPanel(
+        
+        h3("Painel Lateral"),
+        
+        sliderInput("nitens", "Número de Itens", min = 2, max = 10, value = 5)
+        
+        ),
+      
+      #Painel Principal
+      mainPanel(
+        
+        #Linha 1
+        fluidRow(
+          
+          #Coluna 1
+          column(6,
+                 
+                 #Tabela
+                 dataTableOutput("tabela")
+          ),
+          
+          #Coluna 2
+          column(6,
+                 
+                 #Coluna 2 - Linha 1
+                 fluidRow(
+                   
+                   #Gráfico 1
+                   plotOutput("grafico1")
+                   
+                 ),
+                 
+                 #Coluna 2 - Linha 2
+                 fluidRow(
+                   
+                   #Gráfico 1
+                   plotOutput("grafico2")
+                   
+                   
+                 ),
+                 
+        )
+      )
+    )
+  )
+)
+
+# Server
+server <- function(input, output) {
+
+  
+  dados <- reactive({
+    
+    data.frame(y = sample(letters[1:3], 100, replace = T), x = sample(paste("Item", 1:input$nitens), 100, replace = T))
+    
+  })
+  
+  output$tabela <- renderDT({
+    
+    dados() 
+    
+  })
+  
+  output$grafico1 <- renderPlot({
+    
+    dados() %>% 
+      ggplot(aes(x = x, fill = y)) + 
+      geom_bar(position = 'dodge', stat = 'count')
+    
+  })
+  
+  output$grafico2 <- renderPlot({
+    
+    data.frame(x = 1:5, y = (rnorm(5) + 6:10)) %>% 
+      ggplot(aes(x=x, y = y)) + 
+      geom_line(color = 'turquoise', size = 3) + 
+      scale_x_continuous("Itens", labels = c("1" = "Item 1", "2" = "Item 2" ,"3" =  "Item 3", "4" = "Item 4", "5" = "Item 5"))
+    
+  })
+    
+}
+
+# Run the application 
+shinyApp(ui = ui, server = server)
+```
+
+Estes são os principais layouts de páginas simples. Existem outros painéis e possibilidades de layouts personalizados. Basta utilizar os elementos e a disposição do sistema de grid para adequar seu dashboard ao formato que julgar mais conveniente.
+
+## Layouts de múltiplas páginas
+
+Conforme seu dashboard cresce em complexidade, é possível que a quantidade de informações disponíveis não fique adequadamente representada em uma única aba. Suponha que você está desenvolvendo um *dashboard* que analisa o desempenho de um varejista. Este varejista compra mercadorias e revende ao consumidor. Neste caso, seria interessante analisar tanto dados de compras quanto dados de vendas.
+
+Entretanto, por se tratarem de informações distintas, talvez seja interessante separar dados de compras de dados de vendas. Seria possível inclusive uma terceira seção que relaciona compras e vendas, revelando o lucro sobre cada produto, por exemplo.
+
+Para casos desta natureza, existe a possibilidade de utilizar um *layout* com múltiplas páginas, em que, cada página seria destinada a uma informação diferente.
+
+Existem três layouts principais em `shiny` para trabalhar com múltiplas páginas:
+
+-   `tabsetPanel()` - Cria um conjunto de abas dentro de uma região do *dashboard*, por exemplo, no painel principal.
+
+    ![](img/layout_shiny/tabset.PNG){style="border-style: groove;"}
+
+-   `navlistPanel()` - Acrescenta um menu de navegação lateral ao dashboard.
+
+    ![](img/layout_shiny/navlist.PNG){style="border-style: groove;"}
+
+-   `navbarPage()` - Adiciona abas de navegação horizontais na página, na posição desejada. Por padrão, aparece ao lado do título. É possível definir um menu de abas verticais com a função `navbarMenu()`.
+
+    ![](img/layout_shiny/navbarPage.PNG){style="border-style: groove;"}
+
+As abas são definidas por meio da função `tabPanel()`. Cada `tabPanel` atua como um painel principal, ou seja, os elementos de interface do usuário que serão exibidos em cada página devem ser inseridos dentro da função.
+
+A seguir exemplos simplificado de cada layout. Execute cada um deles e observe a diferença entre eles.
+
+### `tabsetPanel()`
+
+```{r, eval=FALSE}
+#| code-fold: true
+library(shiny)
+
+#UI
+ui <- fluidPage(
+  
+  #Título
+  titlePanel("fluidPage() + tabsetPanel()"),
+  
+  #Define a lista de navegação
+  tabsetPanel(id = "abas",
+
+    
+    #Aba 1
+    tabPanel("Aba 1", 
+             
+             h2("Conteúdo da aba 1")
+             
+             ),
+
+    #Aba 2
+    tabPanel("Aba 2", 
+             
+             h2("Conteúdo da aba 2")
+             
+    ),
+    
+    #Aba 3
+    tabPanel("Aba 3", 
+             
+             h2("Conteúdo da aba 3")
+             
+    )
+  )
+  
+)
+
+# Server
+server <- function(input, output) {
+
+  
+
+}
+
+# Run the application 
+shinyApp(ui = ui, server = server)
+
+```
+
+### `navlistPanel()`
+
+```{r, eval=FALSE}
+#| code-fold: true
+library(shiny)
+
+#UI
+ui <- fluidPage(
+  
+  titlePanel("fluidPage() + navlistPanel"),
+  
+  #Define a lista de navegação
+  navlistPanel(id = "abas",
+    
+    #Inclusão de cabeçalho
+    "Cabeçalho 1",
+    
+    #Aba 1
+    tabPanel("Aba 1", 
+             
+             h2("Conteúdo da aba 1")
+             
+             ),
+    
+    #Inclusão de cabeçalho
+    "Cabeçalho 2",
+    
+    #Aba 2
+    tabPanel("Aba 2", 
+             
+             h2("Conteúdo da aba 2")
+             
+    ),
+    
+    #Aba 3
+    tabPanel("Aba 3", 
+             
+             h2("Conteúdo da aba 3")
+             
+    )
+  )
+  
+)
+
+# Server
+server <- function(input, output) {
+
+  
+
+}
+
+# Run the application 
+shinyApp(ui = ui, server = server)
+```
+
+### `navbarPanel()`
+
+```{r, eval=FALSE}
+#| code-fold: true
+library(shiny)
+
+#UI
+ui <- navbarPage(
+  
+  "navbarPage()",
+  
+    #Aba 1
+    tabPanel("Aba 1", 
+             
+             "Conteúdo da aba 1"
+             
+             ),
+    
+    #Aba 2
+    tabPanel("Aba 2", 
+             
+             "Conteúdo da aba 2"
+             
+    ),
+    
+    #Aba 3
+    tabPanel("Aba 3", 
+             
+             "Conteúdo da aba 3"
+             
+  ),
+  
+  #Submenus
+  navbarMenu(
+    
+    "Submenus",
+    
+    #Aba 4.1
+    tabPanel("Aba 4.1", 
+             
+             "Conteúdo da aba 4.1"
+             
+    ),
+    
+    #Aba 4.2
+    tabPanel("Aba 4.2", 
+             
+             "Conteúdo da aba 4.2"
+             
+    ),
+    
+    #Aba 4.3
+    tabPanel("Aba 4.3", 
+             
+             "Conteúdo da aba 4.3"
+             
+    )
+  )
+)
+  
+
+# Server
+server <- function(input, output) {
+
+  
+
+}
+
+# Run the application 
+shinyApp(ui = ui, server = server)
+
+```
+
+Com estes layouts básicos apresentados, é possível construir *dashboards* de variados formatos, que se adequem à aplicação de interesse. A combinação destes layouts com o sistema de grid permite customização praticamente ilimitada em termos de posicionamento dos elementos.
+
+Com isso, apresentamos os principais layouts padrão disponíveis em `shiny`. Além destes, existem diversos pacotes que estendem as possibilidades de apresentação de *dashboards.* Dentre estes, apresentaremos a seguir o pacote `shinydashboard`.
+
+## Shinydashboard
+
+Conforme vimos até aqui, vimos que o pacote `shiny`, permite a criação de páginas da web, aplicativos e *dashboards* em R. O pacote oferece uma série de elementos que possibilitam a apresentação de dados de maneira dinâmica, controle de entrada e saída de dados, interação de usuários com os aplicativos, dentre outras possibilidades. Como seu escopo é bastante amplo, é necessário algum nível de especialização para desenvolver aplicações específicas, como *dashboards* por exemplo.
+
+Especificamente, para facilitar a construção de *dashboards*, a equipe do RStudio criou um pacote que direciona os elementos do pacote `shiny` para desenvolvimento destes paineis de informação: o pacote [`shinydashboard`](https://rstudio.github.io/shinydashboard/).
+
+O pacote, além de oferecer uma estrutura básica voltada para *dashboards*, ele enriquece o espectro de visualizações com novos elementos, tais como:
+
+-   cards e infobox,
+
+-   menu de notificação,
+
+-   menu de tarefas,
+
+-   controle de usuários
+
+-   caixas, dentre outros.
+
+Podemos acessar um exemplo criado com o pacote `shinydashboard` neste [link](https://gallery.shinyapps.io/087-crandash/). Este painel apresenta a popularidade de pacotes do R de acordo com o percentual de downloads nos últimos 5 minutos. Vamos conhecer a estrutura básica de um *dashboard* gerado com o pacote `shinydashboard`.
+
+### Estrutura
+
+O pacote `shinydashboard`, na prática, é um layout adicional para o pacote `shiny` com elementos extras. A estrutura de um app shiny é preservada e deve ser composta de `ui` e `server`. Enquanto há mudanças na `ui`, o `server` segue com o mesmo funcionamento. A ui de um dashboard desenvolvido com o pacote `shinydashboard` é composto por três elementos principais, alocados dentro de uma página, criada pela função `dashboardPage()`:
+
+-   Cabeçalho: `dashboardHeader()`;
+
+-   Menu lateral: `dashboardsidebar()`;
+
+-   Corpo do dashboard: `dashboardBody()`;
+
+A estrutura básica é gerada pelo código a seguir:
+
+```{r, eval=FALSE}
+library(pacman)
+p_load(shiny, shinydashboard)
+
+## app.R ##
+library(shiny)
+library(shinydashboard)
+
+ui <- dashboardPage( #Define o corpo do dashboard----
+  
+  #Cabeçalho do dashboard----
+  dashboardHeader(),
+  
+  #Barra lateral do dashboard----
+  dashboardSidebar(),
+  
+  #Corpo do dashboard----
+  dashboardBody()
+)
+
+server <- function(input, output) { }
+
+shinyApp(ui, server)
+```
+
+Este código gera o dashboard abaixo, em que indicamos cada região.
+
+![](img/layout_shiny/blank_dashboard.png){style="border-style: groove;" width="700"}
+
+Podemos incluir um título em nosso dashboard por meio do argumento `title`, dentro da função `dashboardHeader`. Ele aparecerá à esquerda do ícone de menu, icone este que permite a ocultação da barra lateral. A barra lateral é o local ideal para inclusão de widgets. O corpo do dashboard é o local em que serão inseridos nossos elementos.
+
+*Dashboards* gerados com este pacote podem trabalhar com layout de página única ou com um sistema de abas de formato semelhante ao `navlistPanel`. Como o diferencial deste pacote é seu *layout*, focaremos no formato de abas.
+
+As abas funcionam com a combinação de dois elementos:
+
+-   `menuItem(text, tabName, icon)` - Define o *link* para a aba. Deve ser inserido no `sidebarMenu`.
+
+-   `tabItem(tabName)` - Gera a aba na `ui`. Deve ser inserido dentro do `dashboardBody`.
+
+O argumento `tabname`, presente em ambas as funções, é responsável pela vinculação do item com a aba. Vejamos a seguir um exemplo simplificado do sistema de abas. Ele criará duas abas: Uma destinada à visualização e outra reservada para a exibição de dados.
+
+```{r, eval=FALSE}
+library(pacman)
+p_load(shiny, shinydashboard)
+
+ui <- dashboardPage( #Define o corpo do dashboard----
+  
+  #Cabeçalho do dashboard----
+  dashboardHeader(title = "Dashboard"),
+  
+  #Barra lateral do dashboard----
+  dashboardSidebar(
+    
+    ##Menu lateral----
+    sidebarMenu( 
+      
+      ##Item 1 - Visualização----
+      menuItem("Visualização", tabName = "visualizacao", icon = icon("chart-simple")),
+      
+      ##Item 2 - Dados----
+      menuItem("Dados", tabName = "dados", icon = icon("database"))
+      
+      )
+   
+    
+  ),
+  
+  #Corpo do dashboard----
+  dashboardBody(
+    
+    ##Cria um espaço para a inclusão das abas
+    tabItems(
+      
+      ##Aba Visualização----
+      tabItem(tabName = "visualizacao",
+              
+              h1("Elementos da aba 1 - Visualização")
+              ),
+      
+      ##Aba Dados----
+      tabItem(tabName = "dados",
+              
+              h1("Elementos da aba 2 - Dados")
+      )
+    )
+  )
+)
+
+server <- function(input, output) { }
+
+shinyApp(ui, server)
+```
+
+Essa estrutura permite a criação de abas para diferentes finalidades. Note que os `menuItem` e os `tabItem` tem os mesmos `tabName`, o que permite ao R identificar a ligação entre eles. Note que, dentro do menu lateral, foi necessário incluir os elementos dentro da função `sidebarMenu`. O pacote `shinydashboard` reserva apenas um espaço para o elemento, mas os comportamentos são gerados pelas funções do pacote `shiny`. O mesmo ocorre para as abas, que devem ser inseridas dentro de uma função `tabItems`.
+
+Note que utilizamos ícones para personalizar as abas. São utilizados ícones das bibliotecas *fontawesome* e *glyphicon*. Os ícones destas bibliotecas podem ser consultados nos links abaixo:
+
+-   <https://fontawesome.com/>
+
+-   <https://getbootstrap.com/docs/3.4/components/#glyphicons>
+
+Basta incluir o nome do ícone dentro da função `icon()`. Ícones podem ser usados em qualquer local do *dashboard*, não apenas nos menus.
+
+### Elementos adicionais
+
+Vamos explorar alguns dos elementos adicionados pelo pacote `shinydashboard`. Foram incluídos alguns elementos, como menus de usuários, de mensagens, etc. Mas focaremos nos elementos mais utilizados na construção do corpo do dashboard: caixas para os elementos e cards para indicadores.
+
+#### `box` e `tabBox`
+
+Nos apps desenvolvidos em `shiny` puro, muitas vezes temos a sensação de que os elementos estão soltos no espaço, sem delimitações, o que pode gerar uma sensação de desorganização. A inclusão destes elementos dentro de caixas pode amenizar este problema.
+
+A primeira opção é a função `box()`, que gera uma caixa simples, com ou sem título, para a inclusão de elementos. A imagem abaixo exemplifica seu uso:
+
+![](img/layout_shiny/body-boxes-header-2.png){width="700"}
+
+A função cria uma caixa no corpo do *dashboard*, na qual elementos podem ser adicionados. Elas seguem layout de coluna, ou seja, os elementos são adicionados um abaixo do outro.
+
+Uma segunda opção, são as `tabBox`. Como o próprio nome diz, são caixas com abas para conteúdos distintos, possibilitando a divisão de conteúdo, visualizações diferentes de um mesmo elemento, dentre outras possibilidades. A seguir exemplos de sua utilização:
+
+![](img/layout_shiny/body-tabboxes.png){fig-align="center" width="700"}
+
+Assim como o uso de abas, as `tabBox` devem ser usadas apenas se necessário, pois podem segmentar a visualização dos dados de forma excessiva.
+
+`box` e `tabBox` tem, por padrão, largura 6. Se quisermos que elas ocupem o espaço total de uma linha ou coluna, devemos utilizar a opção `width = 12`. Como elas seguem um layout de coluna, não é necessário inserí-las em colunas, caso se deseje caixas lado a lado, basta definir sua largura. A seguir, um exemplo da utilização destas caixas.
+
+```{r, eval=FALSE}
+library(pacman)
+p_load(shiny, shinydashboard)
+
+#Interface do Usuário ----
+ui <- 
+  #Define o corpo do dashboard----
+  dashboardPage( 
+  
+  #Cabeçalho do dashboard----
+  dashboardHeader(title = "Dashboard"),
+  
+  #Barra lateral do dashboard----
+  dashboardSidebar(
+    
+    ##Menu lateral----
+    sidebarMenu( 
+      
+      ##Item 1 - Visualização----
+      menuItem("Visualização", tabName = "visualizacao", icon = icon("chart-simple")),
+      
+      ##Item 2 - Dados----
+      menuItem("Dados", tabName = "dados", icon = icon("database"))
+      
+      )
+  ),
+  
+  #Corpo do dashboard----
+  dashboardBody(
+    
+    ##Cria um espaço para a inclusão das abas
+    tabItems(
+      
+      ##Aba Visualização----
+      tabItem(tabName = "visualizacao",
+              
+              ##Adiciona uma linha
+              fluidRow(
+
+                       ###Adiciona uma caixa
+                       box(title = "Exemplo de Box"),
+
+                       ###Adiciona uma tabBox
+                       tabBox(
+                         
+                         ####Primeira Aba
+                         tabPanel("Aba 1", "Conteúdo da aba 1"),
+                         
+                         ####Segunda Aba
+                         tabPanel("Aba 2", "Conteúdo da aba 2")
+                       )
+                      )
+            ),
+      
+      ##Aba Dados----
+      tabItem(tabName = "dados",
+              
+              h1("Elementos da aba 2 - Dados")
+            )
+    )
+  )
+)
+
+#Servidor----
+server <- function(input, output) { }
+
+shinyApp(ui, server)
+```
+
+#### `infoBox` e `valueBox`
+
+O pacote shinydashboard inseriu na biblioteca do shiny novos elementos, que são bastante úteis, *cards*. Os cards são cartões com informações, geralmente incluídos no topo da página, que exibem informações importantes relacionadas ao problema em questão. Em geral são apresentados indicadores chave da análise de dados (KPI).
+
+Estes cards contemplam dois formatos bastante semelhantes. Cards do tipo infoBox apresentam um ícone, seguido de um texto e/ou valores numéricos, com ênfase no ícone.
+
+![](img/layout_shiny/infobox.png){fig-align="center" width="700"}
+
+Já os cards to tipo valueBox dão mais ênfase ao valor.
+
+![](img/layout_shiny/valuebox.png){fig-align="center" width="700"}
+
+O primeiro é ideal quando se quer destacar o comportamento do indicador. Já o segundo, quando se deseja destacar o valor do indicador. Se quisermos indicar valores dinâmicos nos cards, devemos usar a versão interativa destes objetos, `infoBoxOutput()`, em conjunto com a função `renderInfoBox()` e `valueBoxOutput()`, em conjunto com a função `renderValueBox()`. Vamos observar exemplos de boxes estáticos e dinâmicos.
+
+```{r, eval=FALSE}
+library(pacman)
+p_load(shiny, shinydashboard)
+
+#Interface do Usuário ----
+ui <- 
+  #Define o corpo do dashboard----
+  dashboardPage( 
+  
+  #Cabeçalho do dashboard----
+  dashboardHeader(title = "Dashboard"),
+  
+  #Barra lateral do dashboard----
+  dashboardSidebar(
+    
+    ##Menu lateral----
+    sidebarMenu( 
+      
+      ##Item 1 - Visualização----
+      menuItem("Visualização", tabName = "visualizacao", icon = icon("chart-simple")),
+      
+      ##Item 2 - Dados----
+      menuItem("Dados", tabName = "dados", icon = icon("database")),
+      
+      #Adiciona um slider
+      sliderInput("progresso", "Progresso", min = 0, max = 100, value = 50)
+      
+      )
+   
+    
+  ),
+  
+  #Corpo do dashboard----
+  dashboardBody(
+    
+    ##Cria um espaço para a inclusão das abas
+    tabItems(
+      
+      ##Aba Visualização----
+      tabItem(tabName = "visualizacao",
+              ##Adiciona uma linha
+              fluidRow(
+                
+                ###Adiciona um infobox estático----
+                infoBox("Progresso", value = "50%", icon = icon("bars-progress"), width = 3),
+                
+                ###Adiciona um infobox dinâmico----
+                infoBoxOutput("info_progresso", width = 3),
+                
+                ###Adiciona um ivaluebox estático
+                valueBox("Progresso", value = "50%", icon = icon("bars-progress"), width = 3),
+                
+                ###Adiciona um valuebox dinâmico
+                valueBoxOutput("value_progresso", width = 3)
+              ),
+              
+              ##Adiciona uma linha
+              fluidRow(
+
+                       ###Adiciona uma caixa
+                       box(title = "Exemplo de Box"),
+
+                       ###Adiciona uma tabBox
+                       tabBox(
+                         
+                         ####Primeira Aba
+                         tabPanel("Aba 1", "Conteúdo da aba 1"),
+                         
+                         ####Segunda Aba
+                         tabPanel("Aba 2", "Conteúdo da aba 2")
+                       )      
+                )
+              ),
+      
+      ##Aba Dados----
+      tabItem(tabName = "dados",
+              
+              h1("Elementos da aba 2 - Dados")
+      )
+    )
+  )
+)
+
+#Servidor----
+server <- function(input, output) { 
+  
+  #infoBox dinâmica----
+  output$info_progresso <- renderInfoBox({
+    
+    infoBox(title = "Progresso", value = paste(input$progresso, "%") , icon = icon("bars-progress"), color = "green")
+    
+  })
+  
+  #valueBox dinâmica----
+  output$value_progresso <- renderInfoBox({
+    
+    valueBox(subtitle = "Progresso", value = paste(input$progresso, "%") , icon = icon("bars-progress"), color = "green")
+    
+  })
+  
+  }
+
+shinyApp(ui, server)
+```
+
+Os cards tem largura 4 por padrão. Deste modo, para exibir os 4 em uma mesma linha, foi necessário reduzir o tamanho para 3.
+
+Com a apresentação dos cards, os elementos principais do layout oferecido pelo pacote `shinydashboard` foram apresentados. Agora conhecemos os principais layouts de `shiny` para apresentar nossos dados de forma adequada.
+
+Existem outros layouts em pacotes não desenvolvidos pelo RStudio. Listamos alguns abaixo.
+
+-   [shiny.semantic](https://appsilon.github.io/shiny.semantic/), desenvolvido pela [Appsilon](https://appsilon.com/).
+
+-   [shinyMobile](https://github.com/RinteRface/shinyMobile), desenvolvido pela [RInterface](#0){style="font-size: 11pt;"}, especialmente desenvolvido para apps mobile.
+
+-   [shinymaterial](https://ericrayanderson.github.io/shinymaterial/), desenvolvido por [Eric Anderson](https://github.com/ericrayanderson), construído com base no framework da Google, [Material design](https://material.io/design).
+
+Além destes *frameworks*, existe uma vasta gama de extensões para `shiny`. Esta lista está sempre em crescimento e pode ser acessada no link <https://github.com/nanxstats/awesome-shiny-extensions>.
+
+Para finalizar nosso estudo sobre dashboards, apresentaremos brevemente uma forma de customizar elementos de nossos dashboards editando diretamente o código *css*.
+
+## Formatação via CSS
+
+As opções de formatação de apps desenvolvidos em shiny, a princípio são escassas, se considerarmos os parâmetros das funções. Ficamos restritos à customização de gráficos e tabelas.
+
+Entretanto, uma forma de ter acesso total aos elementos de formatação de nossos *apps* é por meio da inclusão de linhas de CSS em nosso código. Para tal, não é sequer necessário ter conhecimentos avançados de CSS. Podemos efetuar a edição no inspetor de elementos do navegador e utilizar o código CSS gerado diretamente em nossa `ui`. Vejamos um exemplo simples.
+
+Considere o nosso último app, gerado em `shinydashboard`. Suponha que tenhamos interesse em alterar a fonte do cabeçalho. A função dashboardHeader não contém nenhum parâmetro para tal. Porém, se clicarmos com o botão direito sobre nosso app em execução e selecionarmos `"Inspect Element"`, teremos acesso ao código fonte do dashboard:
+
+![](img/layout_shiny/inspect.PNG){fig-align="center"}
+
+Se quisermos alterar a fonte, basta utilizar o seletor de elementos, clicar sobre o elemento desejado e realizar a alteração desejada na caixa de propriedades. Por exemplo, nosso título é o elemento `.main-reader .logo`. Vamos alterar a fonte para `cursive` tamanho `25px` e alinhá-la à direita.
+
+Após realizar as alterações, basta copiar todo o elemento alterado da caixa de edição. Teremos o seguinte código:
+
+```{r, eval=FALSE}
+
+".main-header .logo {
+    -webkit-transition: width .3s ease-in-out;
+    -o-transition: width .3s ease-in-out;
+    transition: width .3s ease-in-out;
+    display: block;
+    float: left;
+    height: 50px;
+    font-size: 25px;
+    line-height: 50px;
+    text-align: right;
+    width: 230px;
+    font-family: cursive;
+    padding: 0 15px;
+    font-weight: 300;
+    overflow: hidden;
+}"
+```
+
+Para repassar estas alterações para o shiny, incluiremos estas alterações na `ui`. Devemos incluir o código acima dentro da função `dashboardBody()`. As instruçoes devem estar dentro de duas outras funções: `tags$head`, que informa que o código será incluído ao final da seção `head`, e a função `tags$style`, pois se trata de uma alteração no estilo da página. O código final ficaria o seguinte:
+
+```{r, eval=FALSE}
+
+tags$head(
+      tags$style(
+          ".main-header .logo {
+            -webkit-transition: width .3s ease-in-out;
+            -o-transition: width .3s ease-in-out;
+            transition: width .3s ease-in-out;
+            display: block;
+            float: left;
+            height: 50px;
+            font-size: 25px;
+            line-height: 50px;
+            text-align: right;
+            width: 230px;
+            font-family: cursive;
+            padding: 0 15px;
+            font-weight: 300;
+            overflow: hidden;
+          }"
+      )
+    )
+```
+
+Note que o código `.main-header .logo` indica qual o elemento alterado. Podemos colocar quantas alterações quisermos nesta seção, basta separá-las com vírgula. Vamos colocar mais uma para ilustrar e executar o código final do app. A cor de fundo da barra lateral será alterada para verde.
+
+```{r, eval=FALSE}
+library(pacman)
+p_load(shiny, shinydashboard)
+
+#Interface do Usuário ----
+ui <- 
+  #Define o corpo do dashboard----
+  dashboardPage( 
+
+  #Cabeçalho do dashboard----
+  dashboardHeader(title = "Dashboard"),
+  
+  #Barra lateral do dashboard----
+  dashboardSidebar(
+    
+    ##Menu lateral----
+    sidebarMenu( 
+      
+      ##Item 1 - Visualização----
+      menuItem("Visualização", tabName = "visualizacao", icon = icon("chart-simple")),
+      
+      ##Item 2 - Dados----
+      menuItem("Dados", tabName = "dados", icon = icon("database")),
+      
+      #Adiciona um slider
+      sliderInput("progresso", "Progresso", min = 0, max = 100, value = 50)
+      
+      )
+  ),
+  
+  #Corpo do dashboard----
+  dashboardBody(
+    
+    #Tags para formatação----
+    tags$head(
+      tags$style(
+        #Altera a fonte do cabeçalho
+          ".main-header .logo {
+            -webkit-transition: width .3s ease-in-out;
+            -o-transition: width .3s ease-in-out;
+            transition: width .3s ease-in-out;
+            display: block;
+            float: left;
+            height: 50px;
+            font-size: 25px;
+            line-height: 50px;
+            text-align: right;
+            width: 230px;
+            font-family: cursive;
+            padding: 0 15px;
+            font-weight: 300;
+            overflow: hidden;
+          }",
+          #Altera a cor do plano de fundo da barra lateral
+          ".skin-blue .left-side, .skin-blue .main-sidebar, .skin-blue .wrapper {
+          background-color: darkgreen;
+          }"
+      )
+    ),
+    
+    ##Cria um espaço para a inclusão das abas
+    tabItems(
+      
+      ##Aba Visualização----
+      tabItem(tabName = "visualizacao",
+              ##Adiciona uma linha
+              fluidRow(
+                
+                ###Adiciona um infobox estático----
+                infoBox("Progresso", value = "50%", icon = icon("bars-progress"), width = 3),
+                
+                ###Adiciona um infobox dinâmico----
+                infoBoxOutput("info_progresso", width = 3),
+                
+                ###Adiciona um ivaluebox estático
+                valueBox("Progresso", value = "50%", icon = icon("bars-progress"), width = 3),
+                
+                ###Adiciona um valuebox dinâmico
+                valueBoxOutput("value_progresso", width = 3)
+              ),
+              
+              ##Adiciona uma linha
+              fluidRow(
+
+                       ###Adiciona uma caixa
+                       box(title = "Exemplo de Box"),
+
+                       ###Adiciona uma tabBox
+                       tabBox(
+                         
+                         ####Primeira Aba
+                         tabPanel("Aba 1", "Conteúdo da aba 1"),
+                         
+                         ####Segunda Aba
+                         tabPanel("Aba 2", "Conteúdo da aba 2")
+                       )
+                    )
+              ),
+      
+      ##Aba Dados----
+      tabItem(tabName = "dados",
+              
+              h1("Elementos da aba 2 - Dados")
+      )
+    )
+  )
+)
+
+#Servidor----
+server <- function(input, output) { 
+  
+  #infoBox dinâmica----
+  output$info_progresso <- renderInfoBox({
+    
+    infoBox(title = "Progresso", value = paste(input$progresso, "%") , icon = icon("bars-progress"), color = "green")
+    
+  })
+  
+  #valueBox dinâmica----
+  output$value_progresso <- renderInfoBox({
+    
+    valueBox(subtitle = "Progresso", value = paste(input$progresso, "%") , icon = icon("bars-progress"), color = "green")
+    
+  })
+  
+  }
+
+shinyApp(ui, server)
+```
+
+Com isso, temos controle total sobre o formato de nosso `dashboard`. A customização poderá ser realizada à critério do desenvolvedor ou do contratante.
+
+O conteúdo apresentado é suficiente para o desenvolvimento de *apps* e *dashboards* em R de forma bastante satisfatória. Entretanto, é apenas durante o desenvolvimento de problemas voltados à realidade que enfrentamos os reais desafios na construção destas ferramentas.
+
+De todo modo, esperamos que o conhecimento repassado até este momento seja o ponto de partida para a realização de análises de dados que possibilitem a compreensão dos problemas que serão apresentados a cada profissional e que cada desafio gere curiosidade e instigue a pesquisa e o desenvolvimento das habilidades de cada um na **Manipulação e Visualização de Dados Usando o R.**

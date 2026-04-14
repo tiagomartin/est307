@@ -1,0 +1,408 @@
+---
+title: "Gráficos interativos, animados e mapas no R"
+author: "Helgem de Souza"
+format: 
+  html:
+    self-contained: true
+    toc: true
+editor: visual
+bibliography: references.bib
+---
+
+```{r, warning = F, echo=FALSE, message=FALSE}
+pacman::p_load(tidyverse, leaflet, sf, geobr, gganimate, plotly, highcharter, lubridate, data.table, rvest, janitor)
+```
+
+# 
+
+Conforme vimos nas aulas anteriores, a visualização de dados é uma ferramenta fundamental na compreensão da relação entre os dados, na geração de insights e muitas vezes é o produto final da análise de dados.
+
+Entretanto, principalmente nos casos em que se trata do produto final, muitas vezes é necessário acrescentar uma camada de dinamismo para tornar os resultados mais interessantes e agradáveis visualmente. Além do dinamismo, em alguns casos a interatividade é essencial para o entendimento das informações que os dados apresentam. Estes gráficos interativos se tornam ainda mais interessantes quando inseridos em um *dashboard*.
+
+Neste texto apresentaremos algumas possibilidades de inserção de interatividade em gráficos, bem como a geração de mapas interativos. Cada pacote que será apresentado nesta seção contém uma infinidade de possibilidades. O intuito não é aprofundar nas funcionalidades de cada um, e sim apresentar um panorama geral, que poderá ser estudado com mais detalhes em caso de interesse ou necessidade.
+
+## Gráficos Interativos com o pacote `plotly`
+
+O pacote `plotly` é uma biblioteca desenvolvida para a geração de gráficos interativos de alta qualidade. Com a biblioteca é possível a geração de toda sorte de gráficos interativos, tais como gráficos de pontos, linhas, histogramas, boxplots, gráficos de barras, mapas, dentre diversas outras possibilidades.
+
+Diferente dos pacotes mais conhecidos do R, como `ggplot`, o pacote `plotly` gera gráficos como uma aplicação HTML, o que permite a interatividade de seus elementos. Uma característica interessante do pacote e que, ele não somente cria gráficos interativos como converte gráficos do pacote `ggplot` de estáticos para interativos.
+
+Antes de iniciar o estudo dos gráficos em `plotly`, vamos tornar um gráfico `ggplot` interativo. Vamos trabalhar com uma base de dados de mortes por covid19 nos estados brasileiros. Como se trata de um volume considerável de dados, trabalharemos com o pacote `data.table`. Note que os casos estão acumulados por dia, ou seja, os dados anuais consolidados são os dados do último dia do ano.
+
+```{r, message = F, warning = F}
+
+
+#Leitura dos dados
+covid <- fread("datasets/a10_graficos_interativos/brazil_covid19_cities.csv")
+
+#Leitura dos dados de população brasileira da wikipedia
+pop <- read_html("https://pt.wikipedia.org/wiki/Lista_de_munic%C3%ADpios_do_Brasil_por_popula%C3%A7%C3%A3o_(2022)") %>% 
+  html_node("#mw-content-text > div.mw-content-ltr.mw-parser-output > table") %>% 
+  html_table  %>% clean_names %>% 
+  select(codigo_ibge, populacao) %>% 
+  rename(code = codigo_ibge, population = populacao) %>% 
+  mutate(population = str_replace_all(population, "\u00A0", "")) %>% 
+  mutate(code = str_sub(code, 1, 6)) %>%  
+  mutate(code = as.numeric(code)) %>% 
+  data.table()
+
+#Agregando população das cidades aos dados
+covid <- covid[pop, on = .(code = code)]
+covid[, population := as.numeric(population)]
+
+#Agregação dos dados - Mortes e casos totais em MG no ano de 2020
+covid_mg <- covid[state == "MG" & date == "2020-12-31"]
+covid_mg[, population := as.numeric(population)]
+  
+#Gráfico de pontos casos versus mortes por cidade
+g <- covid_mg[, `:=`(case_rate = 1000*round(cases/population, 4), death_rate = 1000*round(deaths/population, 4))] %>% 
+  ggplot(aes(x = case_rate, y = death_rate)) + 
+  geom_point(aes(text = name), size = 3, col = "blue")  +
+  labs(x = "Taxa de casos (por mil hab.)",
+       y = "Taxa de Mortes (por mil hab.)")
+
+#Gráfico ggplot
+g
+
+#Gráfico ggplotly
+ggplotly(g)
+
+```
+
+O que o pacote faz neste caso é converter um gráfico `ggplot` para `plotly` e aplicar as camadas do próprio pacote neste. Vejamos como fazer o mesmo gráfico usando a sintaxe do `plotly`.
+
+```{r, warning=FALSE}
+
+#Gráfico anterior usando o pacote plotly
+covid_mg[, `:=`(case_rate = 1000*round(cases/population, 4), death_rate = 1000*round(deaths/population, 4))] %>% 
+  plot_ly(x = ~case_rate, y  = ~death_rate, text = ~name) %>% 
+  add_markers() %>% 
+  layout(xaxis = list(title = "Taxa de casos (por mil hab.)"),
+         yaxis = list(title = "Taxa de Mortes (por mil hab.)"))
+```
+
+Assim como acontece no pacote `ggplots`, o pacote `plotly` também trabalha com camadas que são adicionadas sobre um gráfico base. Do mesmo modo que o pacote `ggplot2`, a função `plot_ly()` cria uma camada inicial com os atributos estéticos do gráfico e novas camadas são adicionadas por meio de comandos específicos para cada tipo de gráfico:
+
+-   `add_lines`: Adiciona um gráfico de linhas
+
+-   `add_markers`: Adiciona um diagrama de pontos
+
+-   `add_bars`: Adiciona um gráfico de barras
+
+-   `add_boxplot`: Adiciona um ou mais boxplots
+
+-   `add_histogram`: Adiciona um histograma
+
+-   `add_trace`: Função geral para adicionar qualquer tipo de gráfico. Basta informar o tipo no parâmetro `type`. Podemos realizar o mesmo procedimento dentro da função `plot_ly`, entretanto a função `add_trace` é ideal para sobrepor diferentes tipos de gráficos.
+
+Os comandos estéticos devem ser adicionados dentro da função `plot_ly`, precedidos de um sinal de 'til', por exemplo, `plot_ly(x = ~peso, y = ~altura, text = ~imc)`
+
+Os tipos de gráficos que podem ser gerados com o pacote podem ser visualizados no link <https://plotly.com/r/>. Vamos gerar alguns gráficos para compreender a estrutura do pacote. Vamos seguir com a utilização dos dados de COVID.
+
+```{r, warning=FALSE}
+
+#Gráfico de linhas - Casos acumulados de COVID por dia no Brasil
+covid[year(date) == 2020, .(cases = sum(cases)), by = date] %>% 
+  plot_ly(x = ~date, y = ~cases) %>%  
+  add_lines()
+
+#Gráfico de barras de casos acumulados por mês
+covid[year(date) == 2020, .(cases = max(cases)), by = .(month = month(date))] %>% 
+  plot_ly(x = ~month, y = ~cases) %>% 
+  add_bars()
+
+#Boxplot de casos diários por mês no estado de Minas
+covid[state == "MG" & year(date) == 2020, .(cases = sum(cases)), by = .(date)][, .(date, month = month(date), daily_cases = c(0, diff(cases)))] %>% 
+  plot_ly(x = ~month, y = ~daily_cases) %>% 
+  add_boxplot()
+
+#Histograma das mortes diárias no Brasil no período em estudo
+covid[, .(deaths = sum(deaths)), by = .(date)][, .(date, daily_deaths = c(0, diff(deaths)))] %>% 
+  plot_ly(x = ~daily_deaths) %>% 
+  add_histogram()
+
+#Vamos adicionar um novo gráfico de linhas com as mortes ao primeiro gráfico
+covid[year(date) == 2020, .(cases = sum(cases), deaths = sum(deaths)), by = date] %>% 
+  plot_ly(x = ~date, y = ~cases) %>%  
+  add_lines(name = "Casos") %>% 
+  add_trace(name = "Mortes", x = ~date, y = ~deaths, type = "scatter", mode = 'line')
+
+```
+
+No último gráfico poderíamos utilizar mais uma função `add_lines`. Entretanto, a função `add_trace` é bastante útil para adicionar novas camadas aos gráficos, bem como para transformar o gráfico.
+
+Além dos parâmetros básicos, podemos passar parâmetros como cor, tamanho, agrupamento, dentre outros para a função `plot_ly`. Os principais são:
+
+-   `split`: define o agrupamento de variáveis na geração dos gráficos
+
+-   `color`: Colore o gráfico conforme uma variável ou uma cor pré-definida
+
+-   `size`: Altera o tamanho dos elementos
+
+-   `symbol`: altera os símbolos do gráfico
+
+-   `linetype`: altera o tipo de linha.
+
+Vamos observar como os gráficos se alteram com estes parâmetros.
+
+```{r, warning=FALSE, message=FALSE}
+
+#Vamos adicionar a informação do estado no nosso gráfico de casos acumulados no segundo semestre de 2020
+#nos estados da região sudeste
+covid[year(date) == 2020, .(cases = max(cases)), by = .(month = month(date), state)][
+  month %in% 6:12 & state %in% c("MG", "SP", "RJ", "ES")] %>% 
+  plot_ly(x = ~state, y = ~cases, split = ~month) %>% 
+  add_bars()
+
+#Taxas de casos e mortes em MG com cores ordenadas por população
+covid_mg %>% 
+  plot_ly(x = ~case_rate, y  = ~death_rate, text = ~name, color = ~population) %>% 
+  add_markers() %>% 
+  layout(xaxis = list(title = "Taxa de casos (por mil hab.)"),
+         yaxis = list(title = "Taxa de Mortes (por mil hab.)"))
+
+#Taxas de casos e mortes em MG com tamanhos ordenadas por população
+covid_mg %>% 
+  plot_ly(x = ~case_rate, y  = ~death_rate, text = ~name, size = ~population) %>% 
+  add_markers() %>% 
+  layout(xaxis = list(title = "Taxa de casos (por mil hab.)"),
+         yaxis = list(title = "Taxa de Mortes (por mil hab.)"))
+
+#Taxas de casos e mortes em MG com símbolos diferentes para faixas populacionais
+covid_mg[, cat_pop := factor(cut(population, c(0, 100000, 5000000), labels = c("Até 100 mil", "Mais de 100 hab")))] %>% 
+  plot_ly(x = ~case_rate, y  = ~death_rate, text = ~name, symbol = ~cat_pop) %>% 
+  add_markers() %>% 
+  layout(xaxis = list(title = "Taxa de casos (por mil hab.)"),
+         yaxis = list(title = "Taxa de Mortes (por mil hab.)"),
+         legend = list(title = "Faixa populacional"))
+  
+#Gráfico de linhas comparando mortes diárias em 2020 em MG e SP
+covid[year(date) == 2020 & state %in% c("MG", "SP"), .(cases = sum(cases), deaths = sum(deaths)), by = .(date, mg = ifelse(state == "MG", "MG", "SP"))] %>% 
+  plot_ly(x = ~date, y = ~deaths, linetype = ~mg, type = 'scatter', mode = 'line')
+
+```
+
+Um atributo bastante interessante do pacote `plotly` é seu menu interno. Cada gráfico gerado pelo pacote adiciona no canto superior direito um menu em que é possível interagir com o gráfico.
+
+![](img/graficos_interativos/menu_plotly.png){fig-align="center" width="400"}
+
+Nele, é possível salvar a imagem, aplicar e retirar zoom, comparar dados simultâneos de duas séries, dentre outras possibilidades. Além do menu, é possível aplicar zoom por meio de seleção, dentro do próprio gráfico, mover eixos, etc. Conjuntamente com os demais atributos, estas possbilidades tornam o pacote `plotly` uma excelente opção para a geração de uma apresentação mais dinâmica.
+
+Assim como os demais pacotes apresentados até aqui, os exemplos acima representam apenas a ponta do iceberg. É importante que se aprofunde o conhecimento sobre o pacote ao estudar os exemplos e a documentação do pacote. Um guia com todos os gráficos básicos, que contém bastante exemplos, pode ser obtido no link <https://plotly.com/r/>.
+
+## Gráficos animados
+
+Muitas vezes é necessário representar mais de três variáveis em um único gráfico. Uma das alternativas é a utilização de facetas, por exemplo. Entretanto, quando uma das variáveis apresenta ordenação, geralmente a ordenação dos dados no tempo, podemos nos valer de animações para gerar maior dinamismo ao gráfico.
+
+A geração de gráficos animados depende de um ambiente em que a animação possa ser executada. Geralmente este tipo de gráfico é apresentado em ambientes como páginas da web, dashboards, ou relatórios em HTML, como os gerados pelo R Quarto, Jupyter Notebook, Google Colab, etc. Como já estamos familiarizados com o pacote `plotly`, vamos apresentar a funcionalidade de gráficos animados neste pacote.
+
+O próprio pacote possui um parâmetro para executar a animação. Trata-se do parâmetro `frame`, que é incluído dentro da função plot_ly, assim como os parâmetros de agrupamento, cor, tipo de linha, etc. Basta informar qual será a variável responsável pela transição dos frames. Como o gráfico é gerado em HTML, ele permite o controle da execução, como pausar a transição. Vejamos dois exemplos.
+
+```{r, message=FALSE, warning=FALSE}
+
+#Diagrama de pontos comparando casos e mortes por estado e por mês
+covid[year(date) == 2020, .(cases = sum(cases), deaths = sum(deaths), population = sum(population)), by = .(state, month = month(date))] %>% 
+  plot_ly(x = ~cases, y = ~deaths, color = ~state, size = ~population, frame = ~month) %>% 
+  add_markers()
+
+#Gráfico de barras de casos e mortes (dentro das barras) acumulados por estado e mês
+covid[year(date) == 2020, .(cases = max(cases), deaths = max(deaths)), by = .(month = month(date), state)] %>% 
+  plot_ly(x = ~state, y = ~cases, frame = ~month, text = ~deaths) %>% 
+  add_trace(type = "bar", name = "Casos(mortes)") %>% 
+  animation_opts(transition = 0)
+```
+
+Além dos pacotes `ggplot2` e `plotly`, existem outros pacotes para gráficos dinâmicos, como o `highcharter`. Entretanto, mais importante que o aspecto visual, é saber quando e como utilizar as ferramentas para visualização adequada dos dados. Muitas vezes acrescentar complexidade aos gráficos pode tornar a análise mais difícil, ao invés de mais fácil. Deste modo, sempre tente incluir o mínimo de elementos em um gráfico e utilize as ferramentas apresentadas com parcimônia.
+
+Para encerrar o tópico de visualização de dados, vamos fazer uma breve introdução à geração de mapas no R.
+
+## Geração de Mapas
+
+Quando se trabalha com dados georeferenciados, para a visualização de dados é necessário plotar gráficos que levem em consideração a posição dos elementos em um sistema de coordenadas espaciais. Os objetos desta natureza mais utilizados são os mapas. A geração de mapas em R é relativamente simples, graças ao avanço do pacote `sf`, cujo nome se origina da expressão *shape file*. Um arquivo do tipo *shape file* armazena coordenadas necessárias para a geração de polígonos em formatos específicos, como países, estados, cidades, etc.
+
+Os *shape files* do território brasileiro podem ser acessados diretamente do pacote `geobr`. Vamos instalar e carregar ambos os pacotes, para então testarmos alguns exemplos. Inicialmente vamos carregar o formato todos os estados brasileiros
+
+```{r}
+
+#Instalando e carregando os pacotes sf e geobr
+pacman::p_load(sf, geobr)
+
+#Carregando o shape file dos estados brasileiros
+shp_est <- read_state(code_state = "all", year = 2020, showProgress = F)
+```
+
+Vamos agora plotar o mapa usando o pacote `ggplot2`
+
+### Mapas com o pacote `ggplot2`
+
+O pacote `ggplot2`, possui uma geometria específica para a geração de mapas com base em *shape files,* a geometria `geom_sf`. Seu uso é bastante intuitivo. Diferente das demais geometrias, nela não é necessário atribuir parâmetros estéticos (`aes`) à função `ggplot`, apenas o *shape file*. Os parâmetros estéticos devem ser repassados na função `geom_sf()`. Utilizaremos o pacote `geobr` para baixar os dados do Brasil e de Minas Gerais.
+
+```{r, message=FALSE, warning=FALSE, error=FALSE}
+#Mapa do Brasil
+ggplot(shp_est) +
+  geom_sf()
+
+#Mapa do brasil colorido por região
+ggplot(shp_est) +
+  geom_sf(aes(fill = as.character(code_region)))
+
+#Mapa do brasil colorido por estado e com linhas por região
+ggplot(shp_est) +
+  geom_sf(aes(fill = abbrev_state))
+
+#Mapa de municípios de MG vs casos de COVID19
+shp_mg <- read_municipality(code_muni = "MG",
+                            year = 2010,
+                            showProgress = F)
+ggplot(shp_mg) + 
+  geom_sf()
+
+##Convertendo o codigo do municipio para 6 numeros
+shp_mg <- shp_mg %>% 
+  mutate(code = code_muni %>% 
+           as.character %>% 
+           str_sub(1, 6) %>% 
+           as.numeric)
+
+##Vamos agregar os dados de covid para plotar o mapa  cores
+shp_mg_covid <- left_join(shp_mg, covid_mg)
+
+p <- shp_mg_covid %>% 
+  ggplot + 
+  geom_sf(aes(fill = death_rate, text = name)) + 
+  labs(legend = "Mortes (por mil habitantes)") + 
+  scale_color_gradientn(colours = rainbow(10))  
+p %>%  
+  ggplotly()
+
+```
+
+### Mapas com o pacote `leaflet`
+
+Para finalizar, vamos utilizar o pacote `leaflet` para construção de gráficos. Assim como o pacote `plotly`, o pacote `leaflet` pertence a uma coleção de bibliotecas JavaScript para R, chamada `htmlwidgets`(<https://www.htmlwidgets.org/index.html>). Esta biblioteca é destinada à visualização dinâmica de dados. Sugerimos que todos visitem a página para conhecer as demais ferramentas.
+
+O pacote `leaflet` é a biblioteca JavaScript mais popular para mapas interativos. Sua utilização é bastante simples e oferece opções bastante interessantes. Algumas de suas funcionalidades são listadas a seguir:
+
+-   Zoom interativo
+
+-   Compões mapas com combinações de :
+
+    -   *Shapes* e *tiles*
+
+    -   Marcadores
+
+    -   Polígonos
+
+    -   Linhas
+
+    -   Popups
+
+    -   GeoJSON
+
+-   Cria mapas diretamente em documentos R Quarto/Markdown e apps [Shiny](#0)
+
+-   Dentre outras opções disponíveis em (<http://rstudio.github.io/leaflet/>).
+
+Sua utilização é simples. Basta criar um mapa com a função `leaflet()` e incluir novas camadas por meio de funções como `addTiles`, `addMarkers`, `addPolygons`, etc. Vamos criar alguns mapas para compreender o funcionamento da biblioteca.
+
+```{r}
+#| warning: false
+#| message: false
+
+#Mapa da loclaização dos cursos de pós graduação em estatística mineiros em relação à UFOP
+ppgest <- data.frame(
+  curso = c('Bacharelado em Estatística', 
+          'Programa de Pós Graduação em Estatística', 
+          'Programa de Pós Graduação em Estatística Aplicada e Biometria',
+          'Programa de Pós Graduação em Estatística Aplicada e Biometria',
+          'Programa de Pós Graduação em Estatística e Experimentação Agropecuária'),
+  inst = c('UFOP', 'UFMG', 'UFV', 'UNIFAL', 'UFLA'),
+  lat = c(-20.395850, -19.86948, -20.76470,  -21.42103, -21.22705),
+  long = c(-43.50973, -43.96452, -42.86861, -45.94791, -44.97374)
+         ) %>% mutate(text = paste(curso, inst, sep = "-"))
+
+leaflet(ppgest) %>% 
+  addTiles() %>% 
+  addMarkers(lat = ~lat, lng = ~long, popup = ~text)
+
+#Mapa de mortes de COVID
+#Criando uma paleta de cores
+pal = colorNumeric(palette = "Reds", domain = shp_mg_covid$death_rate)
+
+leaflet(shp_mg_covid) %>% 
+  addTiles() %>% 
+  addPolygons(weight = 1, 
+              color = ~pal(death_rate),
+              smoothFactor = 0.5,
+              fillOpacity = 0.5,
+              opacity = 0.8,
+              highlightOptions = highlightOptions(color = "black",
+                                                  weight = 1,
+                                                  bringToFront = TRUE),
+              popup = ~paste0("Cidade: ", name, "<br>",
+                             "Casos: ", cases, "<br>",
+                             "Mortes: ", deaths)) %>% 
+  addLegend("bottomright",
+            title = "Taxa de mortes por<br>mil habitantes",
+            pal = pal,
+            values = ~death_rate,
+            opacity = 0.8)
+
+#Mapa de municípiosmineiros por população
+mun_br <- geobr::read_municipal_seat() %>% 
+  select(code_muni, geom)
+latlong <- mun_br$geom %>% 
+  unlist %>% 
+  matrix(ncol = 2, byrow = T) %>% 
+  data.frame
+latlong <- cbind(mun_br, latlong) %>% 
+  rename("lng" = "X1", "lat" = "X2") %>% 
+  data.frame
+
+shp_mg_covid <- left_join(shp_mg_covid, latlong, by = "code_muni")
+
+leaflet(shp_mg_covid) %>% 
+  addTiles() %>% 
+  addCircleMarkers(lat = ~lat, 
+                   lng = ~lng, 
+                   radius = ~population/100000,
+                   label = ~paste(name, "- População:", round(population/1000,1) , " mil habitantes"))
+```
+
+Finalizamos a seção de visualização de dados com a apresentação de gráficos interativos e mapas. Após esta seção, seu ferramental para representação de dados conta com mais algumas ferramentas. Sugere-se que, todos os pacotes sejam estudados com mais detalhes. Porém, o aprofundamento do conhecimento de modo geral ocorre na prática. Logo, experimente, busque dados, pense em visualizações e pratique bastante suas habilidades de visualização de dados.
+
+## Exercícios
+
+### Exercício 1
+
+Utilize o banco de dados `dados_mostra.csv`, disponível no Moodle, para gerar os seguintes gráficos usando o pacote `plotly`:
+
+1.  Evolução do número de visitas por hora;
+
+2.  Pessoas que ouviram e não ouviram falar do curso de Estatística.
+
+3.  Opiniões sobre o curso de Estatística após a apresentação.
+
+4.  Informações que mais chamaram a atenção dos visitantes
+
+5.  Cidade de origem.
+
+6.  Disponibilidade em receber e-mails por conhecimento prévio sobre o curso
+
+7.  Disponibilidade em receber e-mails por informações que mais chamaram atenção.
+
+Algumas orientações:
+
+-   Corrija os títulos dos eixos e inclua os rótulos sempre que possível.
+
+-   Para gráficos semelhantes, varie elementos (cores, rotações, etc).
+
+-   Interprete os resultados obtidos.
+
+-   Respostas livres devem ser agrupadas como "Outras".
+
+-   Lembre-se de realizar as transformações necessárias nos dados e utilizar os gráficos adequados para cada visualização.
+
+### Exercício 2
+
+Utilize o shape file do estado de Minas Gerais para plotar o mapa do estado, considerando o número de visitas na Mostra de Profissões por cidade. Utilize o formato dos dois últimos mapas apresentados como exemplo.

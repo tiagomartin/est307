@@ -1,0 +1,366 @@
+---
+title: "Importação de dados - Texto e Planilhas Eletrônicas"
+author: "Helgem de Souza"
+format: 
+  html:
+    toc: true
+    toc-title: Sumário
+    toc-location: left
+    self-contained: true
+    
+editor: visual
+bibliography: references.bib
+execute-dir: project
+---
+
+```{r}
+#| echo: false
+pacman::p_load(tidyverse, haven, jsonlite, httr, pacman)
+
+```
+
+# Importação de Dados no R
+
+Conforme visto anteriormente, a fase de **Importação de Dados** consiste na inclusão dos dados já coletados/recebidos para o ambiente de análise. A forma de importação destes dados apresentará variações a depender do tipo de dados em questão. Neste texto trataremos principalmente de dados do tipo **Estruturados**.
+
+Existe uma infinidade de formatos para o armazenamento de dados, cada um deles originado de aplicações e contextos diferentes. Por exemplo, pode-se armazenar informações em arquivos de texto, planilhas eletrônicas, formatos proprietários específicos gerados por *softwares* como SPSS, SAS, MINITAB, arquivos em formatos utilizados na web, como `.json` e `xml`, bancos de dados relacionais, isto considerando principalmente dados estruturados. Vamos apresentar a seguir os procedimentos para a importação de dados dos arquivos mais utilizados em análise de dados.
+
+## Leitura de dados em formato de Texto
+
+Dados em **Formato de Texto** são bastante comuns, talvez o formato mais comum , devido à sua versatilidade, formatação simplificada, facilidade de visualização de sua forma bruta, cuja maioria dos arquivos podem ser executados em softwares do tipo bloco de notas [@Pereira2022]. Outra característica importante se refere à capacidade de armazenamento quase ilimitada. Uma planilha eletrônica em formato `.xlsx`, por exemplo, possui um limite de 1.048.576 linhas por 16.384 colunas.
+
+Os arquivos de texto se apresentam em diversos formatos, cada um com características distintas relacionadas ao formato dos dados. Os principais são os seguintes:
+
+-   ***.txt*** - Utilizado para armazenamento de texto em formato geral, inclusive dados. No caso de dados, a separação de valores pode ser realizado por caracteres diversos, usualmente usa a tabulação.
+
+-   **.csv** - *Comma-separated values*, ou em português, valores separados por vírgulas. Conforme o próprio nome menciona, os valores são separados por vírgula.
+
+-   **.dat** - Formato semelhante ao .txt, mas com extensão diferente para convencionar que se trata de dados, e não de textos em geral. Utiliza-se também formatos .data.
+
+-   **.fwf** - *Fixed width format*, ou formato de largura fixa. Neste tipo de arquivo, cada coluna de dados possui uma quantidade pré fixada de caracteres. Geralmente arquivos do tipo `.fwf` são acompanhado de um arquivo de metadados que contém a informação da largura de cada coluna.
+
+A leitura destes arquivos no R é realizada pela função **read.table()** e suas variantes, como **read.csv**, **read.csv**, **read.delimin**, **read.fwf**, dentre outras.
+
+### Dados em formato .txt
+
+Vamos descrever a principal função, **read.table,** do pacote[@base]. As demais seguem padrão semelhante e são mais voltadas para formatos específicos. A descrição completa da função pode ser obtida digitanto **?read.table** no console do R.
+
+Principais parâmetros da função `read.table()`:
+
+-   **`file`**: nome do arquivo a ser lido. Pode também ser fornecida uma URL completa, ou mesmo dados da área de transferência, informando o parâmetro `file = "clipboard"`. Podemos utilizar a função `choose.files()` como parâmetro para selecionar o arquivo usando o explorador de arquivos.
+
+-   **`header`**: Define se os dados possuem ou não nomes das variáveis em sua primeira linha (cabeçalho).
+
+-   **`sep`**: Caractere de separação dos valores. por padrão, utiliza um "espaço em branco" para separação, que considera também espaços, tabulaçoes e quebras de linhas.
+
+-   **`dec`**: Caractere que define o separador de casas decimais. Considera o padrão americano ".". No caso de conjuntos de dados no padrão brasileiro, cujos decimais são separados por vírgula, deve-se incluir o parâmetro `dec =", "`.
+
+-   **`row.names`** e **`col.names`**: vetores opcionais com nomes de linhas e colunas, respectivamente.
+
+-   **`stringASFactors`**: Converte *strings* em fatores no momento da importação. Definido como falso por padrão.
+
+Vamos agora apresentar alguns exemplos de importação de dados em formato de texto para o R. Vamos utilizar a base de dados disponível no Moodle. O conjunto de dados se refere aos carros disponíveis para venda em um site destinado a negociação de veículos. A leitura dos dados pode ser realizada utilizando o seguinte código:
+
+```{r}
+#Leitura dos dados
+dados <- read.table("datasets/a3_texto_planilhas/carros_venda_webmotors.txt", h = T, sep = "\t")
+
+#Visualizando a estrutura dos dados
+glimpse(dados)
+```
+
+Podemos observar que o conjunto de dados é composto de 6 variáveis,
+
+-   `carro`: Nome do carro.
+
+-   `especificacao`: Especificação detalhada do veículo.
+
+-   `cor`: Cor do veículo.
+
+-   `km`: quilometragem do veículo
+
+-   `anomod`: Ano de fabricação e ano do modelo do carro.
+
+-   `preco`: Valor do anúncio.
+
+O conjunto de dados a seguir será utilizado para visualizar a utilização dos demais parâmetros da função `read.table()`. O arquivo está disponível no Moodle.
+
+Vamos ler o arquivo sem a definição de nenhum parâmetro:
+
+```{r}
+#Leitura dos dados sem nenhuma especificação
+dados_br <- read.table("datasets/a3_texto_planilhas/tabela_brasileiro.txt")
+
+glimpse(dados_br)
+```
+
+Note que os dados saem completamente desorganizados. Todas as colunas de informações aparecem em uma única coluna. Observe que os dados estão separados por ";". Vamos incluir o parâmetro `sep = ";"` e `header = T`:
+
+```{r}
+#Leitura dos dados com sep = ";"
+dados_br <- read.table("datasets/a3_texto_planilhas/tabela_brasileiro.txt", sep = ";", h = T)
+
+glimpse(dados_br)
+```
+
+Note que a variável aproveitamento está reconhecida como do tipo caractere, pois o decimal está separado por vírgula. Vamos agora fazer a leitura incluindo o parâmetro `dec = ","` . Além disso, vamos definir o nome de cada time como um fator, usando o parâmetro `stringAsFactors = T`.
+
+```{r}
+#Leitura dos dados com sep = ";"
+dados_br <- read.table("datasets/a3_texto_planilhas/tabela_brasileiro.txt", sep = ";", h = T, dec = ",", stringsAsFactors = T)
+
+glimpse(dados_br)
+```
+
+Agora a importação do conjunto de dados foi realizada de maneira correta e pode-se prosseguir com sua manipulação. Problemas de leitura como os apresentados acima, somados com problemas de *encoding* (codificação) são bastante comuns na leitura de dados em formato de texto e devem ser avaliados de acordo com cada situação.
+
+### Dados em formato .csv
+
+A leitura de dados no formato `.csv` é mais direta, uma vez que o separador de dados é fixo, o caractere ",". A seguir um exemplo de leitura de um arquivo `.csv`. Vamos utilizar o arquivo de vencedores da maratona de Boston.
+
+```{r}
+#Leitura dos dados da Maratona de Boston
+boston <- read.csv("datasets/a3_texto_planilhas/Mens_Boston_Marathon_Winners.csv")
+
+#Visualização dos dados
+glimpse(boston)
+```
+
+Note que nenhum parâmetro adicional foi necessário para uma importação correta dos dados. A função `read.csv` apresenta os mesmos parâmetros da função `read.table`, caso seja necessária a realização de algum ajuste na importação. A única diferença entre as funções `read.csv` e `read.csv2` é o separador padrão. A função `read.csv` utiliza vírgula como separador padrão*,* enquanto a função `read.csv2` utiliza ponto e vírgula.
+
+### Dados em formato .pdf
+
+Apesar de não ter uma utilização tão abrangente quanto dados nos formatos `.txt` e `.csv`, algumas vezes nos deparamos com a necessidade de obtenção de dados de documentos salvos como texto, principalmente arquivos em formato `.pdf`.
+
+Documentos em formato `.pdf` (Portable Document Format), são amplamente utilizados para a divulgação de informações online, primeiramente pelo alto poder de compactação do formato, e também por ser um documento cuja edição não é tarefa simples.
+
+Muitas entidades utilizam o formato para apresentar relatórios, resultados, tabelas de dados, dentre outros documentos. Por esse motivo, apesar de não ser o formato mais amigável para se trabalhar, arquivos em `.pdf` constituem uma fonte de informação valiosa.
+
+A importação de dados disponibilizados em documentos `.pdf` são realizadas por meio do pacote `pdftools`. Sua manipulação depende de pacotes de tratamento de texto, como por exemplo o pacote `stringr`, ou funções nativas de manipulação de texto do R. A seguir, vamos efetuar a importação dos dados da terceira chamada do SISU da UFOP no ano de 2024.
+
+```{r}
+#| message: false
+
+#Carregamento do pacote pdftools
+pacman::p_load(pdftools)
+
+#Primeiramente trabalharemos com o arquivo offline
+sisu <- pdf_text("datasets/a3_texto_planilhas/3c_sisu_2024_ufop.pdf")
+
+#Vamos verificar algumas características do documento:
+glimpse(sisu)
+
+
+
+```
+
+Podemos perceber que a função `pdf_text` do pacote pdftools carrega o arquivo em formato `character`. Cada página é armazenada em um vetor. Logo, o arquivo é composto por um documento de sete páginas. Vamos explorar a primeira página:
+
+```{r}
+#| warning: false
+#| results: markup
+
+#Exibição da primeira página
+sisu[1]
+
+```
+
+Note que o texto utiliza a cadeia de caracteres `"\n"` para separar linhas. Vamos utilizá-la como separador para entender melhor a estrutura do texto. Para tal vamos usar a função `str_split` do pacote `stringr`, com o respectivo separador. Esta função separa uma string com base em um padrão. Neste caso, será o separador `"\n"`.
+
+```{r}
+#| message: false
+sisu[1] %>% 
+  str_split(pattern = "\n")
+```
+
+Podemos verificar agora que o texto é composto de uma parte estruturada em parágrafos e uma tabela. Perceba também que a página foi agregada em um objeto do tipo lista após separarmos os dados. Queremos extrair a tabela, cujos dados estão disponiveis nas linhas 44 a 59. Vamos isolar a tabela e formatá-la como um dataframe. Vamos fazer a transformação dos dados passo a passo.
+
+Trabalhar com texto pode ser um tanto quanto desafiador. Nesse momento, apresentaremos as soluções sem explicações detalhadas. No futuro trataremos da manipulação de texto em detalhes.
+
+```{r}
+
+tabela_sisu <- sisu %>% 
+  .[1] %>% #Seleção da primeira página
+  str_split(pattern = "\n") %>% #Divisão do texto pelo caractere \n
+  unlist %>% #Conversão de lista em vetor
+  .[44:59] %>% #Seleção das linhas 44 a 59
+  str_split("\\s{2}") %>% #separação de colunas por espaço duplo
+  lapply(function(x)x[x!=""]) %>% #Remoção de elementos vazios
+  unlist %>% #Conversão de lista em vetor
+  str_trim #Remoção de espaços vazios no início e fim dos textos
+
+#Unindo as posições 33 e 37, que contem os mesmos dados
+tabela_sisu[37] <- paste(tabela_sisu[33], "-", tabela_sisu[37])
+tabela_sisu <- tabela_sisu[-33]
+tabela_sisu 
+
+```
+
+Agora que nosso vetor é composto de dados ordenados no formato Curso, CPF, Cota e situação, basta converter os dados em um *data frame*.
+
+```{r}
+
+tabela_sisu %>% #Converte os dados em uma matriz
+  matrix(ncol = 4, byrow = T) %>% #Converte a matriz em dataframe
+  as.data.frame.matrix() %>% #Atribuição dos nomes de colunas
+  rename("curso" = "V1", "cpf" = "V2", 
+         "cota" = "V3", "situacao" = "V4") #Renomear as colunas
+
+```
+
+Note que o resultado final é uma planilha de dados organizada e estruturada, pronta para processos mais avançados da análise de dados. Para efetuar a leitura das demais páginas, bastaria realizar processo semelhante.
+
+Trabalhar com arquivos em `.pdf` requer conhecimentos mais profundos em manipulação de texto e de objetos em R. Por este motivo, não é o formato mais utilizado, porém, muitas vezes, não há outra saída, pois são a única fonte de dados. Nestes casos, é fundamental compreender a estrutura do documento e seus padrões.
+
+A seguir trataremos da importação de dados oriundos de planilhas eletrônicas.
+
+------------------------------------------------------------------------
+
+## Importação de dados de planilhas eletrônicas
+
+O trabalho com planilhas eletrônicas está presente em praticamente todas as áreas. É raro encontrar uma empresa ou organização que não utilize softwares como o Excel, Open Office ou Google Sheets para processar e organizar dados. Em alguns casos, a planilha eletrônica é utilizada para a realização de análises de dados de ponta a ponta, inclusive com a elaboração de *dashboards* completos.
+
+A importação de dados de planilhas eletrônicas, sobretudo arquivos em formato `.xls` e `.xlsx` já foi uma tarefa de maior complexidade. Pacotes destinados a esta finalidade utilizavam softwares externos como *Java* ou *Perl*, o que muitas vezes gerava alguma dificuldade na execução da importação. Atualmente estes obstáculos já foram superados e existe uma série de pacotes que fazem a importação dos dados sem grandes problemas e com grande variedade de opções. Vamos apresentar duas possibilidades de importação de dados de planilhas eletrônicas: dados do Excel e do Google Sheets.
+
+### Dados do Excel - .xls, .xlsx
+
+Conforme citado acima, a utilização de planilhas do Excel é bastante frequente, pois é um software de ampla utilização por profissionais de diversas áreas. Mesmo entre analistas de dados, o Excel é bastante utilizado no pré-processamento e até mesmo na transformação de dados, mesmo não apresentando tantas funcionalidades quanto o R para a execução deste tipo de tarefas.
+
+A importação de arquivos nos formatos `.xls` e `.xlsx` pode ser realizada por uma série de pacotes. Neste conteúdo, utilizaremos o pacote `readxl`, que faz parte do `tidyverse`.
+
+O primeiro passo é instalar e carregar o pacote. Como ele pertence ao `tidyverse`, podemos carregar todo o conjunto de pacotes, ou podemos instalar e carregar o pacote individualmente. Vamos fazer a instalação individual.
+
+```{r}
+#Carregamento do pacote readxl. O pacote é instalado juntamente com o tidyverse
+pacman::p_load(readxl)
+
+```
+
+Podemos utilizar três funções para a leitura das planilhas em formatos do Excel, `read_xls`, `read_xlsx` e `read_excel`. Vamos utilizar a função `read_excel`, pois ela funciona tanto para arquivos do formato `.xls` quanto para o formato `.xlsx`. Vamos checar os principais parâmetros da função **`read_excel`**:
+
+-   `path:` Caminho para o arquivo `.xls` ou `.xlsx`.
+
+-   `sheet`: Planilha a ser lida. Pode ser fornecido o nome da planilha ou sua posição relativa na pasta de trabalho, em formato numérico. Caso não informado, lê a primeira planilha.
+
+-   `range`: O intervalo de células a ser lido. Pode ser informado o intervalo normal, no formato padrão do Excel, `"B3:D65"`, ou pode incluir o nome da planilha, como por exemplo `"Clientes!A2:K56"`. Ao informar o intervalo, parâmetros como `skip`, `sheet` e `n_max` são ignorados.
+
+-   `col_names`: Define se a primeira linha deve ser utilizada como cabeçalho das colunas. Semelhante ao parâmetro `header` da função `read.table`
+
+-   `skip`: Número de linhas que devem ser ignoradas na leitura do arquivo.
+
+-   `n_max`: Número máximo de linhas a ler. A função determina automaticamente o número de linhas considerando sequência de linhas em branco.
+
+Como exemplo, usaremos dados dos programas de pós-graduação da UFOP no ano de 2021, disponível no Moodle. O arquivo é composto por quatro planilhas. Vamos efetuar a leitura da primeira delas:
+
+```{r}
+
+#Leitura da primeira planilha do arquivo
+dados_pos_ufop <- read_excel("datasets/a3_texto_planilhas/pos_graduacao_ufop21.xlsx")
+
+#Verificando a estrutura dos dados
+glimpse(dados_pos_ufop)
+
+```
+
+Observe que não foi necessário informar nenhum dos parâmetros adicionais para efetuar a leitura dos dados da primeira planilha. Vamos agora verificar a segunda planilha.
+
+```{r}
+#| warning: false
+#| message: false
+#Leitura da segunda planilha do arquivo
+dados_pos_ufop_2 <- read_excel("datasets/a3_texto_planilhas/pos_graduacao_ufop21.xlsx",
+                             sheet = 2)
+
+#Verificando a estrutura dos dados
+glimpse(dados_pos_ufop_2)
+```
+
+Note que as três primeiras linhas apresentam algumas inconsistências. A linha 1 possui apenas um texto e as duas seguintes estão em branco. Para resolver o problema, utilizaremos o parâmetro `skip` para saltar as 3 primeiras linhas.
+
+```{r}
+#| message: false
+#Leitura da segunda planilha do arquivo
+dados_pos_ufop_2 <- read_excel("datasets/a3_texto_planilhas/pos_graduacao_ufop21.xlsx",
+                             sheet = 2, skip = 3)
+
+#Verificando a estrutura dos dados
+glimpse(dados_pos_ufop_2)
+```
+
+Se quisermos apenas as 5 primeiras colunas e as 100 primeiras observações da terceira planilha, podemos utilizar o parâmetro `range` para selecionar apenas os dados de interesse:
+
+```{r}
+#Leitura da segunda planilha do arquivo
+dados_pos_ufop_3 <- read_excel("datasets/a3_texto_planilhas/pos_graduacao_ufop21.xlsx",
+                             sheet = 3, range = "A1:E101")
+
+#Verificando a estrutura dos dados
+glimpse(dados_pos_ufop_3)
+```
+
+Também é possível efetuar a importação de dados copiados de uma planilha eletrônica, por meio da função `read.table`. Para tal, basta utilizar os parâmetros `file = "clipboard"` e `sep = "\t"`. Esse recurso é ótimo para testes rápidos de códigos ou cálculos rápidos, que não requerem procedimentos complexos.
+
+Para finalizar a leitura de dados de planilhas eletrônicas, vamos fazer a leitura de dados do Google Sheets.
+
+### Dados do Google Sheets (.gsheets)
+
+Com o crescimento da oferta e variedade dos serviços Google, um formato que começa a se destacar são aqueles gerados pelos aplicativos do chamado Google Docs. Os arquivos gerados por Google Docs possuem a vantagem de ser gratuitos, de edição online, de forma compartilhada, com uma infinifade de aplicações associadas. Além disso, a ferramenta Google Forms é bastante robusta na coleta de informações. Inclusive, é possível a solicitação de anexos, o que torna o sistema extremamente versátil. Neste sentido, é possível efetuar um levantamento de dados de ponta a ponta com o uso do pacote de serviços do Google.
+
+A leitura dos dados de arquivos `.gsheet,` é realizado diretamente do Google Drive, sem a necessidade de efetuar o download do arquivo. Para tal, utilizamos o pacote `googlesheets4`.
+
+O link a seguir se refere a um formulário Google no qual se solicita algumas informações sobre os alunos da disciplina Visualização e Manipulação de Dados no R: <https://forms.gle/jvWA582vQnWxSH9PA>. A cada período se sugere aos alunos seu preenchimento. As respostas de cada arquivo do Google Forms geram uma planilha no formato `.gsheets.` Faremos a importação desta planilha.
+
+A função responsável pela leitura dos arquivos é a `read_sheet`, do pacote `googlesheest4`. Os principais parâmetros da função são os mesmos da função `read_excel`. Vamos efetuar a leitura do arquivo com as respostas da pesquisa de alunos da disciplina Visualização e Manipulação de Dados no R. Neste caso não usamos o nome do arquivo. Utilizamos o id da planilha, que está presente no link do arquivo, conforme destacado em negrito: https://docs.google.com/spreadsheets/d/**19hnoVu9QKNAp-JOk3EkeLqiIy3vpJeAmS5CsHoEIzx8**/edit?usp=sharing. Para utilizar o pacote, é necessário possuir uma conta Google ativa.
+
+Na primeira utilização, o usuário é questionado se os dados de cache devem ser mantidos entre seções. Assinale sim se não quiser autenticar em sua conta Google sempre que executar o código.
+
+O código a seguir não será executado, pois a sessão não interativa apresenta dificuldades na autenticação. A leitura dos dados será apresentada em sala.
+
+```{r}
+
+#Carregando o pacote googlesheets4
+library(googlesheets4)
+library(googledrive)
+gs4_deauth()
+#Efetuando a leitura dos dados
+dados_pesquisa_alunos <- read_sheet("19hnoVu9QKNAp-JOk3EkeLqiIy3vpJeAmS5CsHoEIzx8")
+
+#Visualizando os dados
+glimpse(dados_pesquisa_alunos)
+
+```
+
+Uma vez que a planilha foi carregada, pode-se trabalhar normalmente os dados, com a vantagem de poder manipular inclusive os anexos, utilizando funções do pacote `googledrive`, como realizar *download*, renomear, movimentar o arquivo dentro do Google Drive, dentre outras possibilidades.
+
+## Importação de dados de outros Softwares
+
+O R, além dos formatos de dados mais gerais, também possui a capacidade de leitura de dados de softwares pagos. Estes softwares são bastante usados em outras áreas e também por empresas. Alguns dos principais softwares estatísticos utilizados são o **SPSS**, o **SAS** e o **Stata**.
+
+Como se trata de formatos proprietários, cada um deles possui uma estrutura de dados específica. Entretanto, um único pacote do `tidyverse` é capaz de realizar a importação de dados dos referidos softwares, o pacote `haven`[@haven]. A seguir, um exemplo de importação de uma base de dados no formato `.SAV`, formato nativo do SPSS. Utilizaremos o arquivo `SalesPerformance.sav`, disponível no Moodle.
+
+```{r}
+#Carregando o pacote
+library("haven")
+
+#Efetuando a importação dos dados
+salesperformance <- read_spss("datasets/a3_texto_planilhas/SalesPerformance.sav")
+
+#Verificando a importação
+glimpse(salesperformance)
+```
+
+Utilizamos a função `read_spss`, cujos parâmetros são semelhantes à função `read_excel`. Como os dados destes softwares seguem uma estrutura pré-definida, de modo geral, a execução da função sem a adição de parâmetros adicionais é capaz de realizar a importação de forma satisfatória. De maneira análoga, efetuamos a leitura de dados do SAS e do Stata por meio das funções `read_sas` e `read_stata`, respectivamente.
+
+Também é possível efetuar a leitura destes dados utilizando o menu **File** do RStudio. Basta seguir o seguinte caminho: **File -\> Import Datasets** e selecionar a opção desejada.
+
+# Exercício
+
+1.  Em um projeto do RStudio, crie uma pasta que receberá as bases de dados disponíveis no Moodle, na base de dados **Aula 1 - Importação de dados - Texto e Planilhas**.
+
+2.  Crie um relatório do **Quarto.**
+
+3.  No relatório, escreva códigos em *chunks* para a leitura de todos os arquivos disponíveis. Garanta que todos eles tenham uma estrutura de *data frame.* Omita mensagens sempre que necessário.
+
+4.  Abaixo de cada código, escreva uma breve descrição do conteúdo do conjunto de dados e uma lista com cada variável e uma breve descrição.
+
+5.  Converta a pasta do projeto em arquivo `.rar` e envie no Moodle.

@@ -1,0 +1,388 @@
+---
+title: "Boas práticas em projetos de análise de dados"
+author: "Helgem Martins"
+format: 
+  html:
+    toc: true
+    toc-title: Sumário
+    toc-location: left
+    self-contained: true
+editor: visual
+---
+
+```{r}
+#| warning: false
+#| echo: false
+
+pacman::p_load(magrittr, dplyr)
+```
+
+# Introdução
+
+Nessa aula aprenderemos/relembraremos boas práticas no desenvolvimento de projetos de análise de dados.
+
+Estamos acostumados a trabalhar com scripts e arquivos de forma isolada. Entretanto, quando a complexidade aumenta, é útil seguir algumas regras que facilitam tanto no desenvolvimento, quanto no compartilhamento dos resultados e no trabalho em equipe.
+
+Nós focaremos em dois tópicos específicos:
+
+-   Projetos
+
+-   Códigos
+
+Entretanto, antes de iniciarmos a discussão dessas práticas, vamos apresentar o conceito de pipe.
+
+# Pipe
+
+Ao se trabalhar com dados em R, muitas vezes é necessário o encadeamento de funções, ou a aplicação em etapas destas funções em objetos salvos. Esta prática apresenta algumas desvantagens, mas podemos destacar duas:
+
+1.  A depender da quantidade de encadeamentos, a legibilidade, bem como a identificação de parâmetros podem ser prejudicados.
+
+2.  Pode ocorrer um acúmulo desnecessário de objetos na memória do R. Se forem objetos de grande dimensão, tais operações podem prejudicar o desempenho das operações.
+
+Vamos observar um exemplo com a base de dados `nycflights13`, do pacote `nycflights` que compila os voos dos aeroportos de Nova Iorque ocorridos no ano de 2013.
+
+Suponha que desejemos calcular o tempo médio de vôo em minutos dos voos com origem do aeroporto JFK com destino ao aeroporto de Atlanta (ATL), no mês de janeiro, removendo voos com duração superior ao percentil 95, que podem ter enfrentado algum problema durante o voo. Como faríamos este procedimento utilizando o pacote `base`?
+
+```{r}
+#| warning: false
+
+#Carrega o pacote nycflights13
+pacman::p_load(nycflights13)
+
+#Estrutura dos dados
+glimpse(flights)
+
+#Uma abordagem por objetos
+##Filtrando voos pela origem, destino e mês
+voo_jfk_atl <- subset(flights, origin == "JFK" & dest == "ATL" & month == 1)
+
+##Calculando o percentil 95
+p95 <- quantile(voo_jfk_atl$air_time, .95, na.rm = T)
+
+#Filtrando voos com tempo superior ao p95
+voo_jfk_atl_95 <- subset(voo_jfk_atl, air_time < p95)
+
+#Calculando a média e convertendo em horas
+mean(voo_jfk_atl_95$air_time, na.rm = T)
+```
+
+Note que utilizamos 4 linhas e criamos 4 objetos para chegar ao resultado final. Poderiamos fazer todo o procedimento em um encadeamento de funções:
+
+```{r}
+#| warning: false
+
+#Abordagem funcional
+
+mean(
+  subset(
+    subset(flights, origin == "JFK" & dest == "ATL" & month == 1), air_time <
+      quantile(
+        subset(flights, origin == "JFK" & dest == "ATL" & month == 1)$air_time,
+        .95, na.rm = T))$air_time, 
+  na.rm = T)
+```
+
+Ambos retornaram os mesmos resultados. A primeira abordagem é mais organizada, mas cria objetos auxiliares, que deveriam ser apagados posteriormente. A segunda abordagem é bastante confusa, pois apresenta uma série de encadeamentos.
+
+Uma alternativa a estas opções é a utilização do comando *pipe* `%>%`. O comando pipe é um encadeador natural, disponível no pacote `magrittr`, nativo no tidyverse. Ele age da seguinte forma. Suponha que tenhamos 2 funções encadeadas. Teríamos em código, algo do tipo `f(x, y)`, ou seja, aplicaremos ao objeto `x`, a função `f()` com parâmetro `y`. Utilizando o pipe, teríamos a seguinte forma: `x %>% f(y)`. No caso de dois encadeamentos, do tipo `g(f(x, y), z)`, teríamos em *pipe* `x %>% f(y) %>% g(z)`. Para tornar mais claro, vamos observar alguns exemplos e posteriormente verificar como ficaria nossa tarefa anterior usando o operador.
+
+```{r}
+#| warning: false
+
+#Carregamento do pacote magrittr
+pacman::p_load(magrittr)
+
+#Média de dados - Normal e Pipe
+mean(flights$air_time, na.rm = T)
+flights$air_time %>% mean(na.rm = T)
+
+#Número de voos ocorridos no mês de janeiro - Normal e Pipe
+nrow(subset(flights, month== 1))
+flights %>% subset(month == 1) %>% nrow
+
+#Abordagem do problema inicial via pipe
+flights %>% 
+  subset(origin == "JFK" & dest == "ATL" & month == 1) %>% 
+  subset(air_time < quantile(air_time, .95, na.rm = T)) %>% 
+  .[, "air_time"] %>% 
+  colMeans() 
+```
+
+Note que o código é tão organizado quanto aquele que definiu vários objetos, porém, não foi necessária a definição de nenhum objeto. O *pipe* é bastante intuitivo na utilização de funções que serão utilizadas durante esse curso, como aquelas do pacote `dplyr`. No RStudio, para incluir um *pipe*, basta utilizar o atalho `ctrl+shift+M`.
+
+No ano de 2022, foi incluído no R um operador pipe nativo, definido pelos símbolos `|>`. Existem algumas diferenças entre eles, que podem ser analisadas neste [link](https://www.tidyverse.org/blog/2023/04/base-vs-magrittr-pipe/).
+
+# Projetos
+
+Agora que relembramos/aprendemos a utilização básica do pipe, vamos começar a falar sobre projetos de análise de dados.
+
+Um projeto de análise de dados se baseia em dois elementos fundamentais: dados e códigos.
+
+Os dados podem ser oriundos de diversas fontes: planilhas, bancos de dados, sites, APIs, corpus, etc. Já os scripts são os conjuntos de instruções que utilizamos para manipular os dados e gerar os resultados desejados a partir deles.
+
+Nesse sentido, em um projeto de análise de dados, conforme a complexidade escala, é bastante útil desenvolvermos uma estrutura que facilite a compreensão de todo o processo. Para isso, podemos utilizar algumas boas práticas que favorecem sua organização.
+
+Como nossa ferramenta nessa disciplina é o RStudio, vamos aprender como organizar um projeto dentro deste ambiente.
+
+## Criação de um projeto
+
+Um projeto no RStudio nada mais é do que um diretório no qual todo o fluxo de trabalho é organizado. A criação de um projeto favorece a organização dos elementos utilizados na análise de dados e otimiza o funcionamento das funcionalidades do software.
+
+Por exemplo, ao definir um projeto, o diretório de trabalho é automaticamente definido para sua pasta de localização. Podemos também usar referências relativas em arquivos e pastas, o que torna o código mais simples. Também podemos compartilhar todo o projeto em uma pasta compactada, garantindo a consistência do fluxo de trabalho e dos arquivos.
+
+Para criar um projeto, basta seguirmos o seguinte caminho do sistema: `File -> New Project...`. Após seguirmos esse caminho, serão apresentadas as seguintes opções:
+
+![](images/clipboard-1678139074.png)
+
+-   Em `New Directory`, o projeto será criado em uma nova pasta. Você deverá indicar o caminho no qual a pasta será criada. Prefira essa opção para projetos novos.
+
+-   Em `Existing Directory`, o projeto será criado em uma pasta existente. Você deverá indicar o caminho no qual a pasta está. Essa opção é útil quando você pretende organizar um projeto já iniciado.
+
+-   Em `Version Control`, um projeto específico para utilização de ferramentas de controle de versão, como **git** e **github** é criado. Esse assunto é bastante específio e não abordaremos nesse curso, mas sugiro que todos leiam sobre em algum momento.
+
+Vamos utilizar a primeira opção. Na janela a seguir, deve ser escolhido o tipo de projeto. No caso de um projeto geral, deve-se escolher a opção `New Project`.
+
+![](images/clipboard-801285841.png)
+
+Após escolher o tipo de projeto, precisamos escolher um nome para o projeto e a pasta no qual ele será alocado. O Rstudio criará uma subpasta dentro da pasta indicada, com o nome do projeto.
+
+![A opção `Use renv with this project` é voltada para a utilização do pacote `renv`, que facilita o controle de versão e o compartilhamento de projetos, garantindo a utilização de pacotes compatíveis por exemplo. Como não detalharemos sua utilização, vamos mantê-la desmarcada. Para finalizar, assinale a opção `Open in new session` e clique em `Create Project`.](images/clipboard-1828011726.png)
+
+Após a criação do projeto, será iniciada uma nova seção e o projeto estará disponível no canto superior direito da janela de recursos do R (*source):*
+
+![Note que outros projetos podem ser acessados diretamente pelo mesmo menu.](images/clipboard-3705112426.png)
+
+Agora que criamos o projeto, vamos trabalhar na estrutura das pastas e arquivos.
+
+## Estrutura de pastas
+
+Conforme mencionado, ao se criar um projeto, uma nova pasta é criada. Inicialmente essa pasta contém apenas um arquivo do tipo R Project (**.RProj**), e uma pasta com arquivos do usuário. Essa pasta será automaticamente definida como diretório de trabalho nessa sessão.
+
+![](images/clipboard-1201056916.png)
+
+Uma boa prática que favorece a organização de um projeto de análise/ciência de dados é a criação de pastas específicas para cada tipo de arquivo. A quantidade de pastas depende da complexidade do projeto. Por exemplo, projetos que trabalham com bases de dados distintas podem ter pastas por formato. *Scripts* com objetivos distintos podem ser separados em pastas específicas, e assim por diante. Entretanto, em uma abordagem inicial, duas pastas são indicadas: `scripts` e `datasets`. A primeira receberá os scripts e a segunda os conjuntos de dados. Os nomes são opcionais. A seguir um exemplo de projeto com essa estrutura:
+
+![As pastas podem ser criadas tanto pelo sistema operacional, quanto pela aba `File` do Rstudio. Essa aba fornece opções para manipulação de pastas e arquivos. Pastas adicionais podem ser criadas, por exemplo para armazenar figuras geradas, bancos de dados exportados, relatórios, dentre diversas outras possibilidades.](images/clipboard-3526481234.png)
+
+Agora que definimos uma estrutura básica para nosso projeto, vamos falar sobre boas práticas relacionadas aos códigos em R.
+
+# Códigos
+
+A partir do momento que conhecemos o problema e definimos uma estrutura para o projeto, pode-se iniciar o processo de execução da análise de dados. E no R, a análise de dados é realizada com base em código.
+
+Como já sabemos, um código é um conjunto ordenado de instruções desenvolvido para a realização de uma tarefa específica. No caso de uma análise de dados, os códigos são responsáveis por tarefas como importação e manipulação de dados, modelagem e visualização.
+
+Nesse sentido, assim como uma receita que deve ser seguida à risca para que o roduto final seja satisfatório, é importante que o código esteja bem organizado para garantir algumas características ideais, das quais destacaremos a **legibilidade.**
+
+O código deve ser facilmente compreendido por outros humanos, com estrutura clara, nomes representativos para seus elementos. Ele deve apresentar comentários que facilitem sua interpretação por outros leitores e deve ser facilmente reprodutível. Além disso, deve-se evitar complexidades desnecessárias.
+
+Para garantir essa legibilidade, podemos seguir algumas boas práticas que favorecem tal organização. Vamos listar algumas delas:
+
+## Estrutura do código
+
+Em projetos de análise de dados em linguagem R, o código quase sempre apresenta algumas etapas comuns, devido à natureza do probelma.
+
+Uma boa abordagem para o desenvolvimento de códigos legíveis é a organização dessas tarefas em uma ordem que faça sentido para a execução das tarefas. Uma proposta que quase sempre funciona é a seguinte:
+
+1.  Carregamento de pacotes
+
+2.  Importação de scripts
+
+3.  Definição de funções e valores globais
+
+4.  Leitura de dados
+
+5.  Códigos.
+
+Essa ordem garante que não faltarão elementos para a execução da próxima. Por exemplo, o carregamento de pacotes deve ser sempre a primeira etapa, pois as demais podem depender dela. A seguir algumas dicas para cada sessão.
+
+### Carregamento de pacotes
+
+O uso de gerenciadores de pacotes é interessante para evitar longos códigos iniciais de carregamento, checagem de pacotes instalados, etc. O pacote `pacman` ajuda bastante nessa tarefa. A função `p_load()` carrega os pacotes instalados e aqueles que ainda não estão instalados ela instala e carrega na sequência.
+
+### Importação de scripts
+
+Para tornar o código mais acessível e menos extenso, uma possibilidade é a segmentação do código em scripts menores, específicos para cada função. Por exemplo, pode se desenvolver um script para reunir as funções desenvolvidas para a tarefa, outro para tarefas de organização de dados, para verificação de consistência, dentre outras possibilidades.
+
+Para carregar scripts no formato `.R`, utiliza-se a função `source()`.
+
+Uma outra prática interessante é nomear os scripts conforme a tarefa específica e numerá-los por ordem de importação. Por exemplo, suponha 3 scripts externos: um com funções desenvolvidas especificamente para a análise, um para transformação de dados e um terceiro para a geração de estatísticas descritivas. Uma possibilidade seria utilizar os seguintes nomes de arquivos:
+
+-   `1_funcoes`
+
+-   `2_transformacao_dados`
+
+-   `3_analise_descritiva`
+
+O uso de nomes que indicam a tarefa realizada pelo script ajuda no desenvolvimento, na manutenção e na reprodutibilidade do código. Use nomes sucintos e não utilize espaços.
+
+Perceba que foi utilizada a nomeação do tipo `snake_case` . Outros tipos de nomeação, como `PascalCase` ou `camelCase` podem ser utilizadas para nomear os arquivos.
+
+### Definição de funções e valores globais
+
+Caso seu script de análise de dados não contenha muitas funções, uma opção é incluí-las no código principal. Nesse caso, lembre-se sempre de fazê-lo no início do documento. Incluir funções no meio do código ou entre as análises pode gerar dificuldades para tratamento de erros ou ajustes na função.
+
+Assim como as funções, caso seu script possua variáveis globais, as defina no início do código.
+
+### Leitura de dados
+
+Usualmente trabalhamos com bases de dados de terceiros. Esses dados costumam vir nomeados conforme a utilização do fornecedor dos dados. Para facilitar o trabalho, é sempre importante renomear os dados de uma forma que seja compreensível e faça sentido para você. Assim, ao receber os dados para análise:
+
+1.  Crie um backup com os dados originais
+
+2.  Renomeie os arquivos com um nome que facilite sua compreensão e manipulação.
+
+3.  Caso haja mais de uma base de dados, utilize a mesma convenção aplicada aos scripts e renomeie os dados.
+
+Por exemplo, suponha que para um projeto foram recebidos dois arquivos: `Dados de vendas 2024.xlsx` e `Dados de vendas 2025.xlsx`. se o interesse for uma análise comparativa entre esses anos, bons nomes para os arquivos seriam: `vendas_24` e `vendas_25`.
+
+São nomes mais simples de trabalhar em código e explicam bem a função de cada conjunto de dados.
+
+Para finalizar, vejamos algumas regras para uma melhor escrita dos códigos
+
+### Boas práticas na escrita de códigos
+
+O código de modelagem de dados é a parte mais importante do processo. Todos os cuidados tomados até aqui ocorreram para possibilitar uma melhor execução do código e, consequentemente, resultados melhores.
+
+Cada programador/analista tem suas nuances para escrita de código. Inclusive alguns estudos alegam que é possível identificar um programador pelo código, como se fosse uma impressão digital.
+
+Entretanto, para escrever um código legível e inteligível, existem algumas regras globais que facilitam a compreensão, justamente por representarem características que agradam a maioria dos programadores. São elas: **espaçamento, indentação e comentários.**
+
+Entretanto, antes de falar das três principais características, existe uma característica específica do R que deve ser abordada: a **atribuição**.
+
+#### Atribuição
+
+Em linguagem R, é possível atribuir valores a objetos de duas formas: utilizando os símbolos `=` e `<-`. Porém, o símbolo `=` também é utilizado dentro de funções na atribuição de parâmetros.
+
+Nesse caso, uma prática que torna mais clara a distinção entre o que é **objeto** e o que é **parâmetro**, é a seguinte regra:
+
+-   utilize `<-` para atribuir objetos (atalho `alt + -` no Rstudio);
+
+-   utilize `=` para atribuir parâmetros.
+
+Dessa forma o código fica ainda mais claro para leitura de terceiros e do próprio programador.
+
+#### Espaçamento
+
+Observe o código a seguir. Ele filtra os voos dos aeroportos `JFK` e `ATL` no mês de janeiro:
+
+```{r}
+#|eval: false
+
+##Filtrando voos pela origem, destino e mês
+voo_jfk_atl<-subset(flights,origin=="JFK"&dest=="ATL"&month==1)
+```
+
+Você acha ele um pouco confuso, desorganizado? Se a resposta é sim, provavelmente é porque não foram utilizados espaços entre seus elementos.
+
+Um código é como um livro. Cada instrução funciona como uma frase, inserida no contexto do problema. É importante utilizar espaços entre seus elementos para melhorar a redação da frase. Imagine ler a frase anterior sem espaços: **Cadainstruçãofuncionacomoumafrase,inseridanocontextodoproblema**. É legível, mas desagradável.
+
+Vamos comparar os códigos com e sem espaço. Qual você prefere?
+
+```{r}
+
+#|eval: false
+
+##Filtrando voos pela origem, destino e mês
+voo_jfk_atl<-subset(flights,origin=="JFK"&dest=="ATL"&month==1)
+
+voo_jfk_atl <- subset(flights, origin == "JFK" & dest == "ATL" &
+                        month == 1)
+```
+
+Então, lembre-se de dar espaço para seu código "respirar".
+
+#### Indentação
+
+Uma outra característica importante é a indentação. Ela permite a distinção de níveis entre as tarefas realizadas pelo código. Podemos saber, por exemplo, quais tarefas de uma função são subtarefas de uma outra, ou se algum processo depende de outro para ser realizado.
+
+Para entender sua importância, vamos utilizar um exemplo. A seguir, um script que gera um diagrama de dispersão com curva de ajuste:
+
+```{r}
+#| eval: false
+flights   %>%   
+group_by(dest)  %>%  
+summarize(
+distance = mean(distance),
+speed = mean(distance / air_time, na.rm = TRUE)) %>%  
+ggplot(aes(x = distance, y = speed)) +
+geom_smooth(
+method = "loess",
+span = 0.5,
+se = FALSE, 
+color = "white", 
+linewidth = 4) +
+geom_point()
+```
+
+Perceba que é difícil compreender onde um processo começa e outro termina, quais as dependências do script, as funções aplicadas, etc. O que causa essa dificuldade é a falta de indentação. Note como fica mais fácil identificar os elementos com o código indentado:
+
+```{r}
+#| eval: false
+flights  %>%  
+  group_by(dest)  %>%  
+  summarize(
+    distance = mean(distance),
+    speed = mean(distance / air_time, na.rm = TRUE)
+  ) %>%  
+  ggplot(aes(x = distance, y = speed)) +
+  geom_smooth(
+    method = "loess",
+    span = 0.5,
+    se = FALSE, 
+    color = "white", 
+    linewidth = 4
+  ) +
+  geom_point()
+```
+
+É fácil perceber agora a ordem das operações. O conjunto de dados `flights` foi agrupado pelo destino(`dest`), calculadas a distância (`distance`) e a velocidade médias (`speed`) e gerado o gráfico por meio das funções `ggplot`(cria as camadas), `geom_smooth` (cria a linha do modelo ajustado) e `geom_point` (plota os pontos).
+
+Outros ponto importante é a quebra de linha a cada operador `pipe`. Ela garante uma melhor leitura de cada passo do código. O mesmo vale para os sinais de + do pacote `ggplot`.
+
+Já a quebra de linhas por parâmetro é opicional. Mas recomenda-se não utilizar linhas de código muito longas para evitar a necessidade de rolagem de janela para visualização do comando completo. Vejamos a função anterior sem quebra de linhas por parâmetro:
+
+```{r}
+#| eval: false
+flights  %>%  
+  group_by(dest)  %>%  
+  summarize(distance = mean(distance),speed = mean(distance / air_time, na.rm = TRUE)
+  ) %>%  
+  ggplot(aes(x = distance, y = speed)) + 
+  geom_smooth(method = "loess", span = 0.5, se = FALSE, color = "white", linewidth = 4) +
+  geom_point()
+```
+
+#### Comentários
+
+Pra finalizar, vamos tratar dos comentários. Comentários são úteis para explicar o que ocorre em determinadas áreas do código. Além disso, no RStudio, os comentários funcionam como delimitador de seções.
+
+Para inserir um comentário no código, utilizamos o caractere `#`. Qualquer texto escrito após esse caractere será considerado um comentário. Vejamos um exemplo:
+
+```{r}
+#Esse é um comentário. A linha a seguir não é executada.
+#mean(rnorm(100, 0, 1))
+
+#A linha a seguir é executada.
+mean(rnorm(100, 0, 1))
+```
+
+Conforme dito, podemos utilizar um comentário para criar uma sessão. Uma sessão de código serve para separar áreas que realizam tarefas distintas.
+
+No RStudio, existe uma funcionalidade que delimita as seções automaticamente. Para isso, basta utilizar o atalho `Ctrl + Shift + R`. Ao utilizar esse atalho, será exibida uma janela para nomear a sessão:
+
+![](images/clipboard-3614330404.png)
+
+Após escrever o nome da seção, será adicionado o comentário que gera a sessão:
+
+![](images/clipboard-2596003524.png)Ao adicionar uma sessão, o RStudio cria um atalho para a linha de código em dois locais: No menu outline, localizado na parte superior direita da janela de recursos (`Source`), e no canto inferior esquerdo da mesma janela:
+
+![](images/clipboard-3117768554.png)
+
+Utilize esse recurso para facilitar a navegação pelo código, o que facilita o reconhecimento de cada uma das tarefas executadas em cada parte do código.
+
+# Conclusão
+
+Nessa aula aprendemos uma série de artifícios que facilitam a estruturação e a execução de um bom código para análise de dados. Sempre que necessário, consulte esse material para rememorar estas dicas.
+
+Lembre-se que as práticas descritas nessa aula não são obrigatórias. Mas sua aplicação tende a atuar como facilitadora do trabalho de análise de dados.
