@@ -85,31 +85,31 @@ As colunas `ID_CLIENTE` e `ID_PRODUTO`, nas tabelas `CLIENTES` e `PEDIDOS`, resp
 
 Estes são dois dos principais tipos de variáveis em SQL, listados a seguir:
 
--   PRIMARY KEY - chave primária de identificação de um elemento;
+- PRIMARY KEY - chave primária de identificação de um elemento;
 
--   FOREIGN KEY - Chave estrangeira, utilizada para relacionar duas tabelas;
+- FOREIGN KEY - Chave estrangeira, utilizada para relacionar duas tabelas;
 
--   BIT - Valores Booleanos (0 ou 1);
+- BIT - Valores Booleanos (0 ou 1);
 
--   CHAR, VARCHAR - Cadeias de caracteres, com variações no tamanho da cadeia de caracteres;
+- CHAR, VARCHAR - Cadeias de caracteres, com variações no tamanho da cadeia de caracteres;
 
--   TINYINT, SMALLINT, INT, BIGINT - Valores inteiros, com variação no tamanho do número;
+- TINYINT, SMALLINT, INT, BIGINT - Valores inteiros, com variação no tamanho do número;
 
--   NUMERIC e DECIMAL - Valores fracionários, com definição do número de casas decimais;
+- NUMERIC e DECIMAL - Valores fracionários, com definição do número de casas decimais;
 
--   REAL, FLOAT - Números reais, com a diferença no tamanho do número;
+- REAL, FLOAT - Números reais, com a diferença no tamanho do número;
 
--   DATE, DATETIME, TIME, TIMESTAMP - Armazena datas e horários.
+- DATE, DATETIME, TIME, TIMESTAMP - Armazena datas e horários.
 
 É importante destacar que estes tipos de variáveis se aplicam a diversos formatos de RDBMS, e em particular a bancos de dados que utilizam SQL. Como nosso objetivo principal é consumir dados, não entraremos em mais detalhes sobre o formato de variáveis.
 
 Os bancos de dados são executados por meio dos RDBMS, que se apresentam em três formas básicas:
 
--   **Client-server** - Os dados são armazenados em um servidor central (*server*), que conecta com a máquina do usuário (*client*). Os principais serviços dessa natureza incluem PostgreSQL, MariaDB, SQL Server e Oracle.
+- **Client-server** - Os dados são armazenados em um servidor central (*server*), que conecta com a máquina do usuário (*client*). Os principais serviços dessa natureza incluem PostgreSQL, MariaDB, SQL Server e Oracle.
 
--   **Cloud -** Similares aos servidores client-server, porém com armazenamento em nuvem. Os principais serviços são oferecidos pela Amazon (Redshift) e Google (BigQuery).
+- **Cloud -** Similares aos servidores client-server, porém com armazenamento em nuvem. Os principais serviços são oferecidos pela Amazon (Redshift) e Google (BigQuery).
 
--   **In-process -** Gerenciadores que são executados diretamente do computador, indicados para bancos de dados em que o administrador é o usuário principal. O mais utilizado é o SQLite, que utilizaremos em nossos estudos.
+- **In-process -** Gerenciadores que são executados diretamente do computador, indicados para bancos de dados em que o administrador é o usuário principal. O mais utilizado é o SQLite, que utilizaremos em nossos estudos.
 
 ## Conectar a um Bancos de Dados no R
 
@@ -150,35 +150,35 @@ A sigla SQL significa Structured Query Language, ou em português, Linguagem de 
 
 O SQL, ao contrário do R, não é uma linguagem de programação. As operações de aquisição de dados em SQL, nosso interesse principal, se dão por meio da realização de **consultas**, ou ***queries***, plural de ***query**.* Uma consulta é um conjunto de diretrizes que são repassadas ao banco de dados, por meio de comandos específicos. Como neste texto o enfoque principal é o consumo de dados, apresentaremos os principais comandos relacionados à obtenção de dados de tabelas e transformação dos dados obtidos. Os principais comandos utilizados em consultas SQL são:
 
--   SELECT
+- SELECT
 
--   FROM
+- FROM
 
--   WHERE
+- WHERE
 
--   GROUP BY
+- GROUP BY
 
--   ORDER BY
+- ORDER BY
 
--   AS
+- AS
 
--   DISTINCT
+- DISTINCT
 
--   COUNT
+- COUNT
 
--   BETWEEN
+- BETWEEN
 
--   HAVING
+- HAVING
 
--   LIMIT
+- LIMIT
 
 Estes comandos serão apresentados separadamente e posteriormente agregados em consultas mais complexas.
 
 Existem duas formas principais de executar consultas SQL em R:
 
--   Função `dbGetQuery()` do pacote DBI;
+- Função `dbGetQuery()` do pacote DBI;
 
--   Inclusão de um *chunk* SQL em um R notebook.
+- Inclusão de um *chunk* SQL em um R notebook.
 
 A primeira função é utilizada em scripts gerais, retorna um dataframe e é o método mais simples para executar uma consulta. Já a segunda, que somente pode ser utilizada dentro de um notebook R, é útil no aprendizado da sintaxe, pois as instruções são repassadas diretamente, sem alterações nas consultas ou funções intermediárias.
 
@@ -307,25 +307,25 @@ FROM results
 
 Algumas das principais funções são:
 
--   **ABS(n)**: Devolve o valor absoluto de (n).
+- **ABS(n)**: Devolve o valor absoluto de (n).
 
--   **CEIL(n)**: Obtém o valor inteiro imediatamente superior ou igual a "n"
+- **CEIL(n)**: Obtém o valor inteiro imediatamente superior ou igual a "n"
 
--   **FLOOR(n)**: Devolve o valor inteiro imediatamente inferior ou igual a "n".
+- **FLOOR(n)**: Devolve o valor inteiro imediatamente inferior ou igual a "n".
 
--   **MOD (m, n)**: Devolve o resto resultante de dividir "m" entre "n".
+- **MOD (m, n)**: Devolve o resto resultante de dividir "m" entre "n".
 
--   **NVL (valor, expressão)**: Substitui um valor nulo por outro valor.
+- **NVL (valor, expressão)**: Substitui um valor nulo por outro valor.
 
--   **POWER (m, exponente)**: Calcula a potência de um número.
+- **POWER (m, exponente)**: Calcula a potência de um número.
 
--   **ROUND (numero \[, m\])**: Arredonda números com o número de dígitos de precisão indicados.
+- **ROUND (numero \[, m\])**: Arredonda números com o número de dígitos de precisão indicados.
 
--   **SIGN (valor)**: Indica o sigal do "valor".
+- **SIGN (valor)**: Indica o sigal do "valor".
 
--   **SQRT(n)**: Devolve a raiz quadrada de "n".
+- **SQRT(n)**: Devolve a raiz quadrada de "n".
 
--   **TRUNC (numero, \[m\])**: Trunca números para que tenham uma certa quantidade de dígitos de precisão.
+- **TRUNC (numero, \[m\])**: Trunca números para que tenham uma certa quantidade de dígitos de precisão.
 
 As expressões em SQL também podem ser usadas com texto. Por exemplo, podemos utilizar o operador (\|\|) para concatenar duas ou mais cadeias de caracteres em uma nova variável. Por exemplo, na tabela drivers, vamos concatenar o nome completo dos pilotos e sua nacionalidade:
 
@@ -369,15 +369,15 @@ WHERE year != 2009
 
 Para tornar as consultas mais detalhadas, podemos utilizar as instruções `BETWEEN`, `AND`, `IN`, `NOT IN` e `OR`. Cada uma delas realiza a seguinte função:
 
--   `BETWEEN`: Seleciona valores entre dois outros valores;
+- `BETWEEN`: Seleciona valores entre dois outros valores;
 
--   `AND`: Agrega condições do tipo E;
+- `AND`: Agrega condições do tipo E;
 
--   `IN`: Verifica se um valor pertence a um objeto;
+- `IN`: Verifica se um valor pertence a um objeto;
 
--   `NOT IN`: Verifica se um valor não pertence a um objeto;
+- `NOT IN`: Verifica se um valor não pertence a um objeto;
 
--   `OR`: Agrega condições do tipo OU
+- `OR`: Agrega condições do tipo OU
 
 Vamos ver alguns exemplos de seleção e dados com estas instruções:
 
@@ -425,9 +425,9 @@ A instrução `WHERE` também pode ser aplicada em dados de texto. Por exemplo, 
 
 Ao se trabalhar com texto em uma consulta para comparações, utiliza-se a instrução `LIKE`, geralmente acompanhada por caracteres especiais, que podem ser utilizados como coringas.
 
--   Underline ( `_` ): Indica a posição do caractere na string;
+- Underline ( `_` ): Indica a posição do caractere na string;
 
--   `%`: Indica que pode ocorrer qualquer quantidade de caractere após a string
+- `%`: Indica que pode ocorrer qualquer quantidade de caractere após a string
 
 Vamos observar algumas possibilidades nos exemplos a seguir:
 
@@ -473,25 +473,25 @@ WHERE LENGTH(forename)=6
 
 Além destes coringas, existem diversas funções para manipulação de texto. As principais são as seguintes:
 
--   `CHARINDEX` - Localiza a posição de um determinado caractere.
+- `CHARINDEX` - Localiza a posição de um determinado caractere.
 
--   `LEFT` - Seleciona uma determina quantidade da caracteres a partir da esquerda.
+- `LEFT` - Seleciona uma determina quantidade da caracteres a partir da esquerda.
 
--   `RIGHT` - Seleciona uma determina quantidade da caracteres a partir da direita.
+- `RIGHT` - Seleciona uma determina quantidade da caracteres a partir da direita.
 
--   `LENGTH` - Conta a quantidade de caracteres.
+- `LENGTH` - Conta a quantidade de caracteres.
 
--   `REPLACE` - Substitui um determinado caractere.
+- `REPLACE` - Substitui um determinado caractere.
 
--   `REVERSE` - Inverte os caracteres.
+- `REVERSE` - Inverte os caracteres.
 
--   `LOWER` - Converte os caracteres para minúsculo
+- `LOWER` - Converte os caracteres para minúsculo
 
--   `UPPER` - Converte os caracteres para maiúsculo
+- `UPPER` - Converte os caracteres para maiúsculo
 
--   `SUBSTRING` - Seleciona parte de uma string com base numa posição inicial e final.
+- `SUBSTRING` - Seleciona parte de uma string com base numa posição inicial e final.
 
--   `SUBSTRING_INDEX` - Seleciona parte de uma string até atingir a quantidade informada do delimitador.
+- `SUBSTRING_INDEX` - Seleciona parte de uma string até atingir a quantidade informada do delimitador.
 
 Outra opção é trabalhar com expressões regulares, ou REGEX. Entretanto, o uso de expressões regulares é um pouco mais complexo e não será aboradado nessa disciplina. Uma introdução bastante completa ao tema pode ser encontrada neste [link](https://blog.dp6.com.br/regex-o-guia-essencial-das-express%C3%B5es-regulares-2fc1df38a481).
 
@@ -510,17 +510,17 @@ GROUP BY var
 
 As principais funções de agregação são as seguintes:
 
--   `COUNT(X)`: Conta os valores não nulos da coluna
+- `COUNT(X)`: Conta os valores não nulos da coluna
 
--   `COUNT(*)`: Conta todos os valores da coluna
+- `COUNT(*)`: Conta todos os valores da coluna
 
--   `MIN`: Retorna o valor mínimo da coluna
+- `MIN`: Retorna o valor mínimo da coluna
 
--   `MAX`: Retorna o valor máximo da coluna
+- `MAX`: Retorna o valor máximo da coluna
 
--   `AVG`: Calcula o valor médio da coluna
+- `AVG`: Calcula o valor médio da coluna
 
--   `SUM`: Calcula a soma dos valores da coluna
+- `SUM`: Calcula a soma dos valores da coluna
 
 A seguir, alguns exemplos de concatenação utilizando o comando `GROUP BY`:
 
@@ -783,14 +783,14 @@ Nestes exercícios, trabalharemos com o banco de dados AdventureWorks. O banco d
 
 1.  Carregue a base de dados `AdventureWorksLT.db`, disponível no Moodle e liste todas suas tabelas. Na sequência, crie consultas para exibir as 10 primeiras linhas de cada tabela, para compreender a estrutura dos dados.
 
-    ```{r}
-    #| warning: false
-    #| include: false
-    aw <- dbConnect(RSQLite::SQLite(),
-                      dbname = "datasets/a5_nocoes_sql/AdventureWorksLT.db")
+```{r}
+#| warning: false
+#| include: false
+aw <- dbConnect(RSQLite::SQLite(),
+                  dbname = "datasets/a5_nocoes_sql/AdventureWorksLT.db")
 
-    dbListTables(aw)
-    ```
+dbListTables(aw)
+```
 
 2.  Crie consultas para retornar os seguintes resultados:
 
@@ -810,54 +810,52 @@ Nestes exercícios, trabalharemos com o banco de dados AdventureWorks. O banco d
 
 3.  A empresa pretende lançar uma promoção para reduzir o estoque de produtos com um número baixo de vendas. Para isso, o setor de marketing precisa de um relatório com os 50 produtos menos vendidos. Elabore um relatório com estes produtos, com o ID do produto e a quantidade de vendas.
 
-    ```{sql, connection = aw}
-    #| eval: false
-    #| include: false
-    SELECT  productid, count(ProductId) AS qtd
-    FROM salesorderdetail 
-    GROUP BY productid
-    ORDER BY qtd 
-    LIMIT 50
-
-    ```
+```{sql, connection = aw}
+#| eval: false
+#| include: false
+SELECT  productid, count(ProductId) AS qtd
+FROM salesorderdetail 
+GROUP BY productid
+ORDER BY qtd 
+LIMIT 50
+```
 
 4.  Utilize o a consulta do exercício anterior como subconsulta e crie um relatório com o nome do produto, quantidade, cor, preço original e o preço promocional, que deve receber um desconto de 20% do preço original (list price).
 
-    ```{sql connection=aw}
-    #| eval: false
-    #| include: false
+```{sql connection=aw}
+#| eval: false
+#| include: false
 
-    SELECT Name, qtd, color, listprice, 0.8*listprice as promoprice
-    FROM 
-    (SELECT  productid, count(ProductId) AS qtd
-    FROM salesorderdetail 
-    GROUP BY productid
-    ORDER BY qtd 
-    LIMIT 50) promo
-    LEFT JOIN product ON promo.productid = product.productid
-
-    ```
+SELECT Name, qtd, color, listprice, 0.8*listprice as promoprice
+FROM 
+(SELECT  productid, count(ProductId) AS qtd
+FROM salesorderdetail 
+GROUP BY productid
+ORDER BY qtd 
+LIMIT 50) promo
+LEFT JOIN product ON promo.productid = product.productid
+```
 
 5.  Para planejar a produção do ano seguinte, a empresa necessita conhecer as vendas de cada um de seus produtos e a receita gerada por cada um. Crie uma consulta que retorne uma lista com nome, quantidade, preço unitário e valor total de vendas de cada produto. Ordene de forma decrescente utilizando o valor total de vendas.
 
-    ```{sql, connection = aw}
-    #| eval: false
-    #| include: false
+```{sql, connection = aw}
+#| eval: false
+#| include: false
 
-    SELECT Name, qtd, listprice, qtd * listprice AS total 
-    FROM (SELECT productid, count(ProductId) AS qtd
-      FROM salesorderdetail 
-      GROUP BY productid
-      ORDER BY qtd DESC) sales
-    LEFT JOIN (SELECT productId, Name, ListPrice
-      FROM Product) products
-    ON products.productid = sales.productid
-    ORDER BY total DESC
-
-    ```
+SELECT Name, qtd, listprice, qtd * listprice AS total 
+FROM (SELECT productid, count(ProductId) AS qtd
+FROM salesorderdetail 
+GROUP BY productid
+ORDER BY qtd DESC) sales
+LEFT JOIN (SELECT productId, Name, ListPrice
+  FROM Product) products
+ON products.productid = sales.productid
+ORDER BY total DESC
+```
 
 ```{sql connection=db_f1}
-
+#| eval: false
+#| include: false
 SELECT *
 from races
 where circuitid = 2

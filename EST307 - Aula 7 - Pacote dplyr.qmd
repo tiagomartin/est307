@@ -40,11 +40,11 @@ glimpse(flights)
 
 Agora que definimos nosso conjunto de dados, vamos iniciar nosso estudo de transformação de dados usando o pacote `dplyr`. O pacote `dplyr` é organizado em três grupos principais, com base nos elementos em que ele opera:
 
--   Linhas;
+- Linhas;
 
--   Colunas;
+- Colunas;
 
--   Grupos.
+- Grupos.
 
 Vamos estudar separadamente os principais verbos para cada um destes elementos.
 
@@ -52,11 +52,11 @@ Vamos estudar separadamente os principais verbos para cada um destes elementos.
 
 Na estrutura *tidy*, cada linha representa uma observação, um indivíduo. Neste sentido, as principais operações com linhas tendem a ser aquelas nas quais as características de cada observação seja relevante. Tais operações afetam apenas as linhas e mantém a informação das colunas inalteradas. As principais são:
 
--   `filter();`
+- `filter();`
 
--   `arrange();`
+- `arrange();`
 
--   `distinct().`
+- `distinct().`
 
 A função `distinct()` diferente das duas primeiras, em alguns casos pode afetar as colunas.
 
@@ -72,38 +72,38 @@ flights %>% filter(air_time < 120)
 
 A função pode ser utilizada com todos os operadores de comparação disponíveis no R,
 
--   `>` maior que;
+- `>` maior que;
 
--   `>=` maior ou igual que;
+- `>=` maior ou igual que;
 
--   `<` menor que;
+- `<` menor que;
 
--   `<=` menor ou igual que;
+- `<=` menor ou igual que;
 
--   `==` igual a;
+- `==` igual a;
 
--   `!=` diferente de;
+- `!=` diferente de;
 
-    bem como podem ser agrupadas com os operadores `&` e `|`. Além destes operadores, outro uso interessante ocorre em conjunto com o operador `%in%`, que mantém todos os valores que pertencem a um determinado vetor. Vejamos alguns exemplos:
+  bem como podem ser agrupadas com os operadores `&` e `|`. Além destes operadores, outro uso interessante ocorre em conjunto com o operador `%in%`, que mantém todos os valores que pertencem a um determinado vetor. Vejamos alguns exemplos:
 
-    ```{r, warning=FALSE}
+  ```{r, warning=FALSE}
 
-    #Seleção dos vôos que partiram após o mês de abril
-    flights %>% 
-      filter(month > 4)
+  #Seleção dos vôos que partiram após o mês de abril
+  flights %>% 
+    filter(month > 4)
 
-    #Voos que partiram no dia 03 de junho
-    flights %>% 
-      filter(month == 6 & day == 3)
+  #Voos que partiram no dia 03 de junho
+  flights %>% 
+    filter(month == 6 & day == 3)
 
-    #Voos com destino nos aeroportos ALB ou DAY
-    flights %>% 
-      filter(dest == "ALB" | dest == "DAY")
+  #Voos com destino nos aeroportos ALB ou DAY
+  flights %>% 
+    filter(dest == "ALB" | dest == "DAY")
 
-    #Mesma seleção anterior, utilizando a função %in%
-    flights %>% 
-      filter(dest %in% c("ALB", "DAY"))
-    ```
+  #Mesma seleção anterior, utilizando a função %in%
+  flights %>% 
+    filter(dest %in% c("ALB", "DAY"))
+  ```
 
 O pacote `base` possui uma função que realiza o mesmo trabalho, a função `subset()`. A função base tende a ser mais rápida que a função `filter()` em bancos de dados menores. Entretanto, a função filter apresenta desempenho superior em bancos de dados de maior dimensão. Outra vantagem da função do pacote `dlpyr()` é que ela trabalha com bancos de dados SQL, o que a função base não faz.
 
@@ -253,69 +253,69 @@ Perceba que utilizamos três parâmetros: `.cols` para identificar as colunas na
 
 Uma das tarefas mais comuns ao se trabalhar com bancos de dados, é a seleção das variáveis de interesse. Muitas vezes, recebemos bancos de dados com uma série de variáveis que não são úteis na ocasião, o que exige a manutenção de apenas uma parcela das informações disponíveis. A função `select()` facilita tal seleção. Ela trabalha com uma série de possibilidades, como:
 
--   Selecionar colunas por nome:
+- Selecionar colunas por nome:
 
-    ```{r, warning=FALSE}
+  ```{r, warning=FALSE}
 
-    #Seleciona colunas year, flight, origin, dest
-    flights %>% 
-      select(year, flight, origin, dest)
-    ```
+  #Seleciona colunas year, flight, origin, dest
+  flights %>% 
+    select(year, flight, origin, dest)
+  ```
 
--   Selecionar colunas entre duas outras
+- Selecionar colunas entre duas outras
 
-    ```{r}
+  ```{r}
 
-    #Seleciona todas as colunas entre o horário de partida e o horário de chegada
-    flights %>% 
-      select(dep_time:arr_time)
+  #Seleciona todas as colunas entre o horário de partida e o horário de chegada
+  flights %>% 
+    select(dep_time:arr_time)
 
-    ```
+  ```
 
--   Selecionar colunas exceto aquelas entre duas outras
+- Selecionar colunas exceto aquelas entre duas outras
 
-    ```{r}
+  ```{r}
 
-    #Seleciona todas as colunas exceto aquelas entre o horário de partida e o horário de chegada
-    flights %>% 
-      select(!dep_time:arr_time)
-    ```
+  #Seleciona todas as colunas exceto aquelas entre o horário de partida e o horário de chegada
+  flights %>% 
+    select(!dep_time:arr_time)
+  ```
 
--   Seleciona todas as colunas de determinada classe
+- Seleciona todas as colunas de determinada classe
 
-    ```{r}
+  ```{r}
 
-    #Selecionar todas as colunas com caracteres
-    flights %>% 
-      select(where(is.character))
-    ```
+  #Selecionar todas as colunas com caracteres
+  flights %>% 
+    select(where(is.character))
+  ```
 
--   Seleciona todas as colunas cujo nome começa com algum padrão
+- Seleciona todas as colunas cujo nome começa com algum padrão
 
-    ```{r}
+  ```{r}
 
-    #Seleciona todas as colunas que começam com "dep"
-    flights %>% 
-      select(starts_with("dep"))
-    ```
+  #Seleciona todas as colunas que começam com "dep"
+  flights %>% 
+    select(starts_with("dep"))
+  ```
 
--   Seleciona todas as colunas cujos nomes terminam com um padrão.
+- Seleciona todas as colunas cujos nomes terminam com um padrão.
 
-    ```{r}
+  ```{r}
 
-    #Seleciona todas as colunas que terminam com "delay"
-    flights %>% 
-      select(ends_with("delay"))
-    ```
+  #Seleciona todas as colunas que terminam com "delay"
+  flights %>% 
+    select(ends_with("delay"))
+  ```
 
--   Seleciona todas as colunas cujo nome contém um determinado padrão.
+- Seleciona todas as colunas cujo nome contém um determinado padrão.
 
-    ```{r}
+  ```{r}
 
-    #Seleciona todas as colunas que contem "arr_"
-    flights %>% 
-      select(contains("arr_"))
-    ```
+  #Seleciona todas as colunas que contem "arr_"
+  flights %>% 
+    select(contains("arr_"))
+  ```
 
 Também é possível utilizar expressões regulares para selecionar colunas, por meio da função `match()`.
 
@@ -440,9 +440,9 @@ flights %>%
 
 Aqui cabem duas observações:
 
--   retiramos a variável `average_time_hour`, pois ela não faz sentido dentro da proposta e foi incluída pela seleção do tipo `contains()`;
+- retiramos a variável `average_time_hour`, pois ela não faz sentido dentro da proposta e foi incluída pela seleção do tipo `contains()`;
 
--   Podemos repassar parâmetros das funções utilizadas para a função `across` por meio da adição dos referidos parâmetros após a função. Em nosso exemplo, solicitamos a remoção dos dados faltantes no cálculo da média.
+- Podemos repassar parâmetros das funções utilizadas para a função `across` por meio da adição dos referidos parâmetros após a função. Em nosso exemplo, solicitamos a remoção dos dados faltantes no cálculo da média.
 
 ## Chaining
 
@@ -467,15 +467,15 @@ Utilizamos a variável frequencia absoluta para criar a variável frequência re
 
 É possível selecionar determinadas linhas dentre as presentes em um agrupamento ou mesmo em um conjunto de dados completo. Para tal, utilizamos as funções da família slice. São cinco principais funções:
 
--   `df |> slice_head(n = 1)` retorna a primeira linha de cada grupo.
+- `df |> slice_head(n = 1)` retorna a primeira linha de cada grupo.
 
--   `df |> slice_tail(n = 1)` retorna a última linha de cada grupo..
+- `df |> slice_tail(n = 1)` retorna a última linha de cada grupo..
 
--   `df |> slice_min(x, n = 1)` retorna a linha com o menor valor da coluna `x`.
+- `df |> slice_min(x, n = 1)` retorna a linha com o menor valor da coluna `x`.
 
--   `df |> slice_max(x, n = 1)` retorna a linha com o maior valor da coluna `x`.
+- `df |> slice_max(x, n = 1)` retorna a linha com o maior valor da coluna `x`.
 
--   `df |> slice_sample(n = k)` retorna k linhas aleatórias.
+- `df |> slice_sample(n = k)` retorna k linhas aleatórias.
 
 Note que, variando o parâmetro `n`, é possível selecionar quantas linhas forem necessárias. Pode-se, por exemplo, utilizar a função `slice_sample()` para definir grupos de treinamento e teste em um modelo de aprendizado estatístico. Vejamos alguns exemplos do uso das funções.
 
@@ -509,15 +509,15 @@ Conforme visto na aula de SQL, raramente uma análise de dados ou um projeto de 
 
 No pacote `dplyr`, temos os mesmos tipos de funções de agregação do SQL. Suponha dois conjuntos de dados, x e y:
 
--   `inner_join(x, y)`: Mantém apenas as observações de `x` que tem correspondentes em `y`;
+- `inner_join(x, y)`: Mantém apenas as observações de `x` que tem correspondentes em `y`;
 
--   *outer joins*: Mantém informações que aparecem em pelo menos um dos bancos de dados. São elas:
+- *outer joins*: Mantém informações que aparecem em pelo menos um dos bancos de dados. São elas:
 
-    -   `left_join(x, y)`: Mantém todas as observações de `x` e agrega as informações disponíveis em `y`;
+  - `left_join(x, y)`: Mantém todas as observações de `x` e agrega as informações disponíveis em `y`;
 
-    -   `right_join(x, y)` : Mantém todas as observações de `y` e agrega as informações disponíveis em `x`;
+  - `right_join(x, y)` : Mantém todas as observações de `y` e agrega as informações disponíveis em `x`;
 
-    -   `full_join(x, y)`: Mantém todas as observações de `x` e `y` e agrega as informações disponíveis em ambos;
+  - `full_join(x, y)`: Mantém todas as observações de `x` e `y` e agrega as informações disponíveis em ambos;
 
 Para exemplificar, vamos utilizar o conjunto de dados `planes`, que oferece a informação dos aviões, juntamente com o conjunto `flights`. Inicialmente vamos fazer o join sem especificar as variáveis de agregação.
 
@@ -555,9 +555,9 @@ Perceba que as funções `inner_join` e `right_join` apresentam os mesmos result
 
 Existe uma grande quantidade de outras funções extremamente relevantes no pacote `dplyr` para manipulação de dados. Entretanto, as principais foram apresentadas neste texto. Para conhecer melhor as demais funções, bem como para obter dicas de uso, podemos utilizar a cheatsheet e os vignettes do pacote, que podem ser obtidos nos links a seguir:
 
--   [Cheatsheet](https://www.rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf);
+- [Cheatsheet](https://www.rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf);
 
--   [Vignettes](https://cran.r-project.org/web/packages/dplyr/vignettes/dplyr.html).
+- [Vignettes](https://cran.r-project.org/web/packages/dplyr/vignettes/dplyr.html).
 
 ## Exercícios
 

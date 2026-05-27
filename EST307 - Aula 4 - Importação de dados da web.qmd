@@ -85,9 +85,9 @@ O formato JSON, acrônimo para JavaScript Object Notation (Notação de objetos 
 
 O JSON é constituído de duas estruturas:
 
--   Uma coleção de pares do tipo nome/valor
+- Uma coleção de pares do tipo nome/valor
 
--   Uma lista ordenada de valores, semelhante à estruturas um vetores, *arrays*, listas ou sequências.
+- Uma lista ordenada de valores, semelhante à estruturas um vetores, *arrays*, listas ou sequências.
 
 Um exemplo simplificado de arquivo json, pode ser visualizado a seguir:
 
@@ -107,13 +107,13 @@ data.frame(Name = c("Mario", "Peach", NA, "Bowser"),
 
 A importação e exportação de arquivos JSON no R é realizada com a utilização do pacote **jsonlite**. A função utilizada para a importação dos dados para o R é a *`fromJSON`*, que apresenta os seguintes parâmetros:
 
--   **txt**: Uma string, URL ou arquivo no formato JSON;
+- **txt**: Uma string, URL ou arquivo no formato JSON;
 
--   **simplifyVector:** Converte arrays JSON que contém apenas primitivas em um vetor;
+- **simplifyVector:** Converte arrays JSON que contém apenas primitivas em um vetor;
 
--   **simplifyDataFrame:** Converte arrays JSON que contém apenas registros em um dataframe;
+- **simplifyDataFrame:** Converte arrays JSON que contém apenas registros em um dataframe;
 
--   **simplifyMatrix:** Converte arrays JSON que contém vetores de mesma dimensão em uma matriz ou *array.*
+- **simplifyMatrix:** Converte arrays JSON que contém vetores de mesma dimensão em uma matriz ou *array.*
 
 Vejamos como a função simplifica estas estruturas no esquema a seguir:
 
@@ -154,32 +154,32 @@ No R podemos utilizar as API utilizando o pacote **`jsonlite`**, o mesmo utiliza
 
 3.  Fazer a requisição de dados para a API por meio do pacote **httr** e seus principais comandos:
 
-    -   **GET**: Busca os dados.
+    - **GET**: Busca os dados.
 
-    -   **POST**: Envia os dados.
+    - **POST**: Envia os dados.
 
-    -   **PUT/PATCH**: Atualiza os dados.
+    - **PUT/PATCH**: Atualiza os dados.
 
-    -   **DELETE**: Exclui os dados..
+    - **DELETE**: Exclui os dados..
 
 4.  Extrair os resultados retornados pela API com o uso da função *fromJSON* do pacote **jsonlite**.
 
 Geralmente, uma API utiliza os códigos de status HTTP para indicar sucesso ou falha de uma requisição. Os códigos de respostas mais utilizados são:
 
--   `200`: requisição foi bem sucedida.
--   `201`: requisição foi bem sucedida e um novo recurso foi criado como resultado.
--   `204`: não há conteúdo para enviar para esta solicitação.
--   `400`: essa resposta significa que o servidor não entendeu a requisição.
--   `404`: o servidor não pode encontrar o recurso solicitado.
--   `500`: o servidor encontrou uma situação com a qual não sabe lidar.
+- `200`: requisição foi bem sucedida.
+- `201`: requisição foi bem sucedida e um novo recurso foi criado como resultado.
+- `204`: não há conteúdo para enviar para esta solicitação.
+- `400`: essa resposta significa que o servidor não entendeu a requisição.
+- `404`: o servidor não pode encontrar o recurso solicitado.
+- `500`: o servidor encontrou uma situação com a qual não sabe lidar.
 
 Para saber sobre os códigos de resposta de uma API, sempre devemos consultar a sua documentação. Hoje em dia, todas as redes sociais possuem APIs para consumir os dados dos usuários e postagens. Normalmente essas APIs pedem um cadastro anterior. O R possui diversos pacotes para consumir APIs interessantes:
 
--   `Quandl`: pacote que fornece diversos dados econômicos de diversos países;
--   `Rfacebook`: pacote que facilita o uso da API do facebook (requer cadastro prévio);
--   `twitterR`: pacote que facilita o uso da API do twitter (requer cadastro prévio);
--   `ggmap`: pacote que facilita o uso da API do google maps;
--   dentre outros.
+- `Quandl`: pacote que fornece diversos dados econômicos de diversos países;
+- `Rfacebook`: pacote que facilita o uso da API do facebook (requer cadastro prévio);
+- `twitterR`: pacote que facilita o uso da API do twitter (requer cadastro prévio);
+- `ggmap`: pacote que facilita o uso da API do google maps;
+- dentre outros.
 
 Veremos agora, como acessar uma API no R, caso essa API não tenha um pacote criado. Vamos acessar a API do IBGE para acessar os dados de municípios. Informações sobre a API, bem como seus parâmetros podem ser obtidos cicando [aqui](https://servicodados.ibge.gov.br/api/docs/agregados?versao=3). Vamos obter a estimativa da população de Ouro Preto e os municípios mais próximos.
 
@@ -250,9 +250,9 @@ Dentro das tags, geralmente existem classes específicas, que poderão ser útei
 
 Outro elemento que será útil no processo de webscraping são os elementps HTML, ou HTML elements. Esses elementos são seções de código HTML que carregam informações agregadas, usualmente relacionadas. Por exemplo, uma tabela presente em um site tende a ter suas informações agrupadas em um único elemento. Utilizaremos uma referência relativa destes elementos para informar ao R sua localização, o código **CSS** ou o código **xpath**. Utilizaremos os códigos CSS e xpath de forma instrumental. Mais detalhes podem ser obtidos nos links a seguir:
 
--   [CSS - Cascading Style Sheets](https://developer.mozilla.org/pt-BR/docs/Web/CSS)
+- [CSS - Cascading Style Sheets](https://developer.mozilla.org/pt-BR/docs/Web/CSS)
 
--   [Xpath - XML Path](https://www.ibm.com/docs/pt-br/baw/19.x?topic=expressions-xpath-overview)
+- [Xpath - XML Path](https://www.ibm.com/docs/pt-br/baw/19.x?topic=expressions-xpath-overview)
 
 A seguir, vamos apresentar alguns exemplos de Webscrapping usando o pacote **rvest**. Para exemplificar o processo, será utilizado o site agregador de informações de futebol Transfermarkt (<https://www.transfermarkt.com.br/>). Vamos obter as informações dos 25 jogadores de futebol mais valiosos, segundo avaliações do site.
 
@@ -389,15 +389,15 @@ info
 
 Note que nossas informações estão separadas por algumas cadeias de caracteres:
 
--   Time - antes do delimitador **\\n**
+- Time - antes do delimitador **\\n**
 
--   Liga - Entre o delimitador **\\n** e a expressão **Divisão:**
+- Liga - Entre o delimitador **\\n** e a expressão **Divisão:**
 
--   Divisão: Entre as expressões **Divisão:** e **No time desde:**
+- Divisão: Entre as expressões **Divisão:** e **No time desde:**
 
--   Início de contrato: entre as expressões **No time desde:** e **Contrato até:**
+- Início de contrato: entre as expressões **No time desde:** e **Contrato até:**
 
--   Término de contrato: Após a expressão **Contrato até:**
+- Término de contrato: Após a expressão **Contrato até:**
 
 Vamos utilizar essas expressões como delimitadores para obter nossos dados. Para isso utilizaremos a função `str_split`, que divide uma string dados os delimitadores. Como a função apresenta os dados em lista, vamos utilizar a função `unlist` para converter a lista em vetor. Na sequência, vamos utilizar a função `str_view` para imprimir em tela as *strings* organizadas.
 
@@ -482,15 +482,15 @@ rmdr$navigate("https://zeppelin10.ufop.br/HorarioAulas/#")
 
 Precisamos agora identificar os elementos que compõe os links de acesso de cada departamento. No RSelenium, existem várias formas de endereçar um elemento, as principais são:
 
--   name;
+- name;
 
--   id;
+- id;
 
--   classe;
+- classe;
 
--   código css;
+- código css;
 
--   xpath;
+- xpath;
 
 Utilizamos as duas últimas principalmente quando o *name* e o *id* não estão disponíveis. Ao verificar o código fonte (ao clicar **F12** no navegador), percebemos que os elementos relacionados ao link possuem o *id*, que segue o seguinte padrão: `formPrincipal:tabela:i:codigoDepartamento` em que **i** é a posição do link na tabela, iniciando de 0. Ou seja, precisaremos visitar as páginas de 0 a 46. Assim como no webscrap do IMDb, vamos realizar a raspagem da primeira página, que servirá de modelo para as demais.
 
@@ -634,114 +634,117 @@ Ao término desta seção, é possível concluir que o ferramental para obtenç�
 
 1.  O site Brasil API (<https://brasilapi.com.br/>)fornece uma série de APIs gratuitas para estudantes, desenvolvedores, empresas, dentre outros interessados. Acesse o site e apresente os dados de três APIs que você julgue interessantes. Antes de começar, leia com atenção os termos de uso.
 
-    ```{r}
-    #| eval: false
-    GET("https://brasilapi.com.br/api/banks/v1") %>% 
-      content("text") %>% 
-      fromJSON()
-    ```
+```{r}
+#| eval: false
+#| include: false
+GET("https://brasilapi.com.br/api/banks/v1") %>% 
+content("text") %>% 
+fromJSON()
+```
 
 2.  O site Seminovos BH (<https://seminovos.com.br/carro>) é um agregador de anúncios de carros à venda no estado de Minas Gerais. Nele é possível filtrar os anúncios por diversas características. Utilize as técnicas de webscraping para produzir um data frame com os carros disponíveis para venda na cidade de Ouro Preto. Desconsidere os opcionais. **Desafio: Após criar o data frame, crie uma coluna com uma string que contenha os opcionais de cada veículo.**
 
-    ```{r}
-    #| eval: false
-    #Leitura dos dados
-    #Como o site está bloqueando acessos de robôs, vamos usar RSelenium
-    #ex1 <- read_html("https://seminovos.com.br/carro/cidade[]-3449")
+```{r}
+#| eval: false
+#| include: false
+#Leitura dos dados
+#Como o site está bloqueando acessos de robôs, vamos usar RSelenium
+#ex1 <- read_html("https://seminovos.com.br/carro/cidade[]-3449")
 
-    driver <- rsDriver(browser = c("firefox"), chromever = NULL, phantomver = NULL)
+driver <- rsDriver(browser = c("firefox"), chromever = NULL, phantomver = NULL)
 
-    rmdr <- driver[['client']]
+rmdr <- driver[['client']]
 
-    #Leitura do código fonte
-    rmdr$open()
-    rmdr$navigate("https://seminovos.com.br/carro/cidade[]-3449")
+#Leitura do código fonte
+rmdr$open()
+rmdr$navigate("https://seminovos.com.br/carro/cidade[]-3449")
 
-    ex1 <- rmdr$getPageSource()
+ex1 <- rmdr$getPageSource()
 
-    #Definição do elemento
-    dados_ex1 <- ex1 %>% 
-      unlist %>% 
-      read_html %>% 
-      html_element(".anuncios") 
+#Definição do elemento
+dados_ex1 <- ex1 %>% 
+  unlist %>% 
+  read_html %>% 
+  html_element(".anuncios") 
 
-    #Extração do texto
-    texto_ex1 <- dados_ex1 %>% 
-      html_text %>% 
-      str_split("\n") %>% 
-      unlist 
+#Extração do texto
+texto_ex1 <- dados_ex1 %>% 
+  html_text %>% 
+  str_split("\n") %>% 
+  unlist 
 
-    #Limpeza de espaços vazios extras e duplos
-    texto_ex1 <- str_squish(texto_ex1)
+#Limpeza de espaços vazios extras e duplos
+texto_ex1 <- str_squish(texto_ex1)
 
-    #Remoção de espaços vazios ou códigos (strings muito grandes)
-    remover <- which(str_length(texto_ex1) < 2 | str_length(texto_ex1) > 300)
+#Remoção de espaços vazios ou códigos (strings muito grandes)
+remover <- which(str_length(texto_ex1) < 2 | str_length(texto_ex1) > 300)
 
-    texto_ex1 <- texto_ex1[-remover]
+texto_ex1 <- texto_ex1[-remover]
 
-    #Resultado após remoção
-    texto_ex1
+#Resultado após remoção
+texto_ex1
 
-    #Vamos remover algumas palavras irrelevantes, como Nitro, Comparar, Favoritar, etc
-    texto_ex1 <- texto_ex1 %>% 
-      str_remove_all("Nitro|Comparar|Favoritar|Remover da Comparação|Desfavoritar|Turbo|Flex|Grátis|IPVA 2024|NITRO")
+#Vamos remover algumas palavras irrelevantes, como Nitro, Comparar, Favoritar, etc
+texto_ex1 <- texto_ex1 %>% 
+  str_remove_all("Nitro|Comparar|Favoritar|Remover da Comparação|Desfavoritar|Turbo|Flex|Grátis|IPVA 2024|NITRO")
 
-    #Removendo novos espaços vazios
-    texto_ex1 <- texto_ex1[texto_ex1 != ""]
+#Removendo novos espaços vazios
+texto_ex1 <- texto_ex1[texto_ex1 != ""]
 
-    #Note que os opcionais do carro, que não aparecem em tela, aparecem no texto
-    #Como não é de nosso interesse no momento, vamos deletá-los. Eles são precedidos de um ponto. Vamos salvar o resultado em outro objeto, caso desejemos coletar as características mais tarde.
-    texto_anuncios <- texto_ex1[str_detect(texto_ex1, "•") == F]
+#Note que os opcionais do carro, que não aparecem em tela, aparecem no texto
+#Como não é de nosso interesse no momento, vamos deletá-los. Eles são precedidos de um ponto. Vamos salvar o resultado em outro objeto, caso desejemos coletar as características mais tarde.
+texto_anuncios <- texto_ex1[str_detect(texto_ex1, "•") == F]
 
-    #Note que a string Ouro Preto separa os veículos. Elas aparecem a cada 15 observações. Vamos usar esse padrão para criar um dataframe
-    veiculos <- data.frame(matrix(texto_anuncios, ncol = 15, byrow = T))
+#Note que a string Ouro Preto separa os veículos. Elas aparecem a cada 15 observações. Vamos usar esse padrão para criar um dataframe
+veiculos <- data.frame(matrix(texto_anuncios, ncol = 15, byrow = T))
 
-    #Perceba que algumas colunas se repetem. Vamos excluí-las e renomá-las
-    veiculos <- veiculos[-c(2:3, 11:14)]
-    names(veiculos) <- c("valor", "tipo_anunciante", "nome", "modelo", "ano", "km", "combustivel", "transmissao", "cidade")
+#Perceba que algumas colunas se repetem. Vamos excluí-las e renomá-las
+veiculos <- veiculos[-c(2:3, 11:14)]
+names(veiculos) <- c("valor", "tipo_anunciante", "nome", "modelo", "ano", "km", "combustivel", "transmissao", "cidade")
 
-    #Desafio
-    #Vamos criar um data frame com os opcionais e a posição de cada um para conseguir atribuir aos veículos
-    id_op <- texto_ex1 %>% 
-      str_detect("•") %>% 
-      which()
-    opcionais <- data.frame(id = id_op, opcional = texto_ex1[id_op])
-    opcionais$opcional <- str_remove_all(opcionais$opcional, "•")
+#Desafio
+#Vamos criar um data frame com os opcionais e a posição de cada um para conseguir atribuir aos veículos
+id_op <- texto_ex1 %>% 
+  str_detect("•") %>% 
+  which()
+opcionais <- data.frame(id = id_op, opcional = texto_ex1[id_op])
+opcionais$opcional <- str_remove_all(opcionais$opcional, "•")
 
-    #Para atribuir cada opcional a seu veiculo, vamos usar um for
-    aux <- numeric()
-    cont <- 1
-    aux[1] <- cont
-    for(i in 2:(nrow(opcionais))){
+#Para atribuir cada opcional a seu veiculo, vamos usar um for
+aux <- numeric()
+cont <- 1
+aux[1] <- cont
+for(i in 2:(nrow(opcionais))){
       
-      if(opcionais$id[i] == opcionais$id[i - 1] + 1){
+  if(opcionais$id[i] == opcionais$id[i - 1] + 1){
         
-        aux[i] <- cont
-        
-      }else{
-        
-        cont <- cont + 1
-        aux[i] <- cont
-      }
+    aux[i] <- cont
       
-    }
+  }else{
+        
+    cont <- cont + 1
+    aux[i] <- cont
+  }
+      
+}
 
-    #Vamos criar uma lista de opcionais para cada veiculo
-    opc <- split(opcionais$opcional, aux)
+#Vamos criar uma lista de opcionais para cada veiculo
+opc <- split(opcionais$opcional, aux)
 
-    #Agora vamos concatenar os opcionais dentro de cada lista, separados por vírugla
-    opc <- sapply(opc, str_c, collapse = ", ")
+#Agora vamos concatenar os opcionais dentro de cada lista, separados por vírugla
+opc <- sapply(opc, str_c, collapse = ", ")
 
-    #Adicionando os opcionais ao dataframe original
-    veiculos$opcionais <- opc
-    ```
+#Adicionando os opcionais ao dataframe original
+veiculos$opcionais <- opc
+```
 
 3.  Utilize os códigos apresentados na seção de RSelenium para realizar uma pesquisa com os textos **ciência de dados, estatística, aprendizado de máquina** e **inteligência artificial** no Google. Armazene o texto descritivo (indicado em verde) em um vetor. Na sequência, crie um dataframe com os termos pesquisados e os textos obtidos.
 
-4.  ![](images/clipboard-1990165473.png)
+![](images/clipboard-1990165473.png)
 
 ```{r}
 #| eval: false
+#| include: false
 #Cria o driver e direciona a localização do firefox
 driver <- rsDriver(browser = c("firefox"), chromever = NULL, phantomver = NULL)
 
